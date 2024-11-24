@@ -1,16 +1,20 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
+import { Provider } from 'react-redux';
 import { enableScreens } from 'react-native-screens';
+import { store } from './store';
 import 'react-native-reanimated';
-import HomeScreen from "./(tabs)/index";
-import ZipporaHome from './Zippora/ZipporaHome';
 import Login from './Login/Login';
-import Register from './Login/Register';
-import AddAddress from './AddAddress';
+import Register from './Login/Register'
+import VerificationPage from './Login/VerificationPage';
+import MainTabs from './MainTabs';
+import AboutUs from './Profile/AboutUs';
+import ModifyAddress from './Profile/ModifyAddress';
+import PersonalInfo from './Profile/PersonalInfo';
+import SubToAPT from './Zippora/SubToAPT';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -49,24 +53,56 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme} >
-      <Stack.Navigator>
-        {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" /> */}
-        <Stack.Screen
-            name="Login/Login"
-            component={Login}
-            options={{ title: 'Login', headerShown: true }}
+    <Provider store={store}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme} >
+        <Stack.Navigator>
+          {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" /> */}
+          <Stack.Screen
+              name="Login/Login"
+              component={Login}
+              options={{ title: 'Login', headerShown: true }}
+            />
+          <Stack.Screen
+              name="Login/Register"
+              component={Register}
+              options={{ title: 'Register', headerShown: true }}
           />
-        <Stack.Screen
-            name="Login/Register"
-            component={Register}
-            options={{ title: 'Register', headerShown: true }}
-        />
-        {/* <Stack.Screen name="Login/AddAddress" component={AddAddress} /> */}
-        {/* <Stack.Screen name="Zippora/ZipporaHome" component={ZipporaHome} /> */}
-        {/* <Stack.Screen name="+not-found" component={HomeScreen} /> */}
-      </Stack.Navigator>
-    </ThemeProvider>
+          <Stack.Screen
+              name="Login/VerificationPage"
+              component={VerificationPage}
+              options={{ title: 'Verification', headerShown: true }}
+          />
+          <Stack.Screen 
+              name="Zippora/ZipporaHome"
+              component={MainTabs}
+              options={{ title: 'Home', headerShown: true,  headerLeft: () => null }}
+          />
+          <Stack.Screen
+            name="Profile/AboutUs"
+            component={AboutUs}
+            options={{ title: 'About Us', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/PersonalInfo"
+            component={PersonalInfo}
+            options={{ title: 'Personal Information', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/ModifyAddress"
+            component={ModifyAddress}
+            options={{ title: 'Modify Address', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Zippora/SubToAPT"
+            component={SubToAPT}
+            options={{ title: 'Subscribe to Apartment', headerShown: true }}
+          />
+          {/* <Stack.Screen name="Login/AddAddress" component={AddAddress} /> */}
+          {/* <Stack.Screen name="+not-found" component={HomeScreen} /> */}
+        </Stack.Navigator>
+      </ThemeProvider>
+    </Provider>
+    
   );
 }

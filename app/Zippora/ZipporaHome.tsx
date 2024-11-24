@@ -1,54 +1,295 @@
-import React, { useEffect } from 'react';
-import { View, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, Linking } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-//import * as zipporaHomeActions from '../../actions/zipporaHomeAction';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Linking,
+  Image,
+  ScrollView,
+  RefreshControl,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import ZIPText from '../../components/ZIPText';
-//import { RootState } from '../../store'; // Import RootState from your store to type the Redux state
+import { RootStackParamList } from '../../components/types';
+import { useAppDispatch, useAppSelector } from '../store';
+import { getUser } from '../features/userInfoSlice';
+import { fetchUserApartments } from '../features/zipporaInfoSlice';
 
-interface ZipporaHomeProps {
-  componentId?: string;
-}
+const ZipporaHome: React.FC = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const dispatch = useAppDispatch();
+  const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
+  const { apartmentList, selfStoreList, loading, error } = useAppSelector((state) => state.zipporaInfo);
+  const [refreshing, setRefreshing] = useState(false);
 
-const ZipporaHome: React.FC<ZipporaHomeProps> = ({ componentId }) => {
-  //const dispatch = useDispatch();
-//   const { zipList, loading, error } = useSelector((state: RootState) => state.zipporaHome);
+  const fetchUserData = async () => {
+    const credentials = {
+      accessToken: accessToken || '', // Replace with actual access token
+      memberId: memberId || '',
+    };
 
-//   useEffect(() => {
-//     dispatch(zipporaHomeActions.loadZipList());
-//   }, [dispatch]);
+    if (accessToken && memberId) {
+      try {
+        const resultAction = await dispatch(getUser(credentials));
+        if (getUser.fulfilled.match(resultAction)) {
+          console.log('User data fetched successfully:', resultAction.payload);
+        } else {
+          console.error('Failed to fetch user data:', resultAction.payload || resultAction.error);
+          Alert.alert('Error', 'Failed to fetch user data. Please try again.');
+          navigation.navigate('Login/Login');
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching user data:', error);
+        Alert.alert('Error', 'An unexpected error occurred while fetching user data.');
+      }
+    } else {
+      console.error('Missing credentials: Access Token or Member ID');
+      Alert.alert('Error', 'User credentials are missing. Please log in again.');
+      navigation.navigate('Login/Login');
+    }
+  };
+
+  const fetchZipporaData = async () => {
+    await dispatch(fetchUserApartments());
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserData();
+    await fetchZipporaData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchUserData();
+    fetchZipporaData();
+  }, [dispatch]);
 
   const handleUpdatePrompt = () => {
-    Alert.alert('A new version is available', 'Please update for the latest features.', [
+    Alert.alert('Update Available', 'Please update to access the latest features.', [
       { text: 'Cancel' },
       { text: 'Update', onPress: () => Linking.openURL('app_link') },
     ]);
   };
 
+  const handleSubscribeNavigation = () => {
+    navigation.navigate('Zippora/SubToAPT');
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        {/* {zipList.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            onPress={() =>
-              Navigation.push(componentId, {
-                component: { name: 'ZipproaLocation', passProps: { zippora: item } },
-              })
-            }
-          >
-            <ZIPText>{item.cabinetId}</ZIPText>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      {apartmentList.map((apt) => (
+        <React.Fragment key={apt.apartmentId}>
+          <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={handleUpdatePrompt}>
+            <Image source={require('../../assets/images/room.png')} style={styles.image} />
+            <View style={styles.infoContainer}>
+              <ZIPText style={styles.title}>{apt.apartmentName} </ZIPText>
+              <ZIPText style={styles.subTitle}>Unit: {apt.unitName} </ZIPText>
+              <View style={styles.statusContainer}>
+                <ZIPText style={styles.pendingCount}>{apt.zipporaCount} Zippora</ZIPText>
+                <Text style={styles.statusText}>
+                  {apt.approveStatus === "0" && "Pending Management Approval"}
+                </Text>
+              </View>
+            </View>
+            <Icon name="arrow-forward-ios" color="green" size={24} style={styles.icon} />
           </TouchableOpacity>
-        ))} */}
+        
+          {apt.zipporaList.length == 0 ? null
+            :
+            <View style={styles.zipporaOrderContainer}>
+              {apt.zipporaList.map((locker) => (
+                <React.Fragment key={locker.cabinetId}>
+                  <View style={styles.zipporaContainer}>
+                    <Image
+                      source={require('../../assets/images/locker.png')}
+                      style={styles.iconImage}
+                    />
+                    <ZIPText style={styles.cabinetId}>{locker.cabinetId}</ZIPText>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      <ZIPText style={styles.packageText}>{locker.storeCount} packages to pick up</ZIPText>
+                    </View>
+                  </View>
+
+                  {locker.storeList.map((order) => (
+                    <React.Fragment key={order.pickCode}>
+                      <View style={styles.zipporaOrders}>
+                        <View style={styles.orderItem}>
+                          <ZIPText style={styles.courierName}>{ order.courierCompanyName }</ZIPText>
+                          <ZIPText numberOfLines={1} style={styles.pickupCodeText}>
+                            Pickup Code:
+                            <ZIPText style={styles.pickupCode}> { order.pickCode } </ZIPText>
+                          </ZIPText>
+                          <Text numberOfLines={1} style={styles.storeTime}>Store Time: { order.storeTime }</Text>
+                        </View>
+                      </View>
+                    </React.Fragment>
+                  ))}
+                  <View style={{height: 10}}/>
+                </React.Fragment>
+              ))}
+            </View>
+          }
+        </React.Fragment>
+      ))}
+  
+      {/* Round Button and Text */}
+      <View style={styles.subscriptionContainer}>
+        <TouchableOpacity
+          style={styles.roundButton}
+          activeOpacity={0.7}
+          onPress={handleSubscribeNavigation}
+        >
+          <Icon name="home" color="white" size={30} />
+        </TouchableOpacity>
+        <Text style={styles.subscriptionText}>Click Here to Subscribe to an Apartment</Text>
       </View>
-      {/* {loading && <Text>Loading...</Text>}
-      {error && <Text>Error loading zip list</Text>} */}
     </ScrollView>
-  );
+  );  
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  section: { padding: 10, backgroundColor: 'white', borderRadius: 4 },
+  container: {
+    padding: 16,
+    backgroundColor: '#F5F5F5',
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 10,
+    elevation: 3, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  image: {
+    width: 45,
+    height: 45,
+    marginRight: 16,
+  },
+  infoContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  subTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pendingCount: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'green',
+    marginRight: 8,
+  },
+  statusText: {
+    fontSize: 14,
+    color: 'red',
+  },
+  icon: {
+    marginLeft: 10,
+  },
+  zipporaOrderContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  zipporaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  iconImage: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+  },
+  cabinetId: {
+    marginLeft: 10,
+    color: '#666',
+    fontWeight: 900,
+    fontSize: 16,
+  },
+  packageText: {
+    textAlign: 'right',
+    color: '#666',
+  },
+  zipporaOrders: {
+    paddingLeft: 40,
+    borderTopColor: 'lightgray',
+    borderTopWidth: 1,
+    paddingTop: 10,
+    marginBottom: 10
+  },
+  orderItem: {
+    flexDirection: 'column',
+    marginTop: 8,
+  },
+  courierName: {
+    fontSize: 14,
+    color: '#999',
+  },
+  pickupCodeText: {
+    fontSize: 18,
+    color: '#666',
+  },
+  pickupCode: {
+    fontFamily: 'Menlo',
+    color: 'red',
+  },
+  storeTime: {
+    fontSize: 13,
+    color: '#666',
+    fontFamily: 'Menlo',
+  },
+  subscriptionContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  roundButton: {
+    backgroundColor: 'green',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.7,
+  },
+  subscriptionText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+  },
 });
 
 export default ZipporaHome;

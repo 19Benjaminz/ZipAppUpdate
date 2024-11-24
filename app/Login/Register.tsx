@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TouchableOpacity,
-  Keyboard,
   StatusBar,
   Text,
 } from 'react-native';
@@ -10,81 +9,67 @@ import ZIPText from '@/components/ZIPText';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as Animatable from 'react-native-animatable';
 import CommonTextInput from '@/components/CommonTextInput';
+import { useNavigation } from '@react-navigation/native';
+import { NavigationProp } from '@react-navigation/core';
+import { RootStackParamList } from '../../components/types';
+import { useAppDispatch } from '../store';
+import { sendVcode } from '../features/authSlice';
 
 const Register = () => {
-  const [useEmail, setUseEmail] = useState(true);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNum, setPhoneNum] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phoneNum, setPhoneNum] = useState('');
-  const [vCode, setVCode] = useState('');
-  const [showCount, setShowCount] = useState(false);
-  const [count, setCount] = useState(59);
-  const [canSendVCode, setCanSendVCode] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const dispatch = useAppDispatch();
 
-  const emailView = useRef(null);
-  const phoneView = useRef(null);
-  let interval: NodeJS.Timeout;
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, []);
+  const sendVcodeAction = async () => {
+    try {
+      const result = await dispatch(sendVcode(email)).unwrap();
+      console.log("Verification code sent successfully!", result);
+    } catch (error) {
+      console.error("Failed to send verification code:", error);
+    }
+  };
+  
+  const handleSignUp = async () => {
+    console.log("Registering with email...");
+    if (email) {
+      console.log(email);
+      await sendVcodeAction();
+    }
+    navigation.navigate("Login/VerificationPage", {
+      email,
+      phoneNum,
+      firstName,
+      lastName,
+      psd1: password,
+      psd2: confirmPassword,
+    });
+  };
+  
+  
 
   const signInButtonColor = () => {
-    if (useEmail) {
-      return firstName && lastName && email && password && confirmPassword ? 'rgba(42,187,103,1)' : 'rgba(42,187,103,0.5)';
-    } else {
-      return firstName && lastName && phoneNum && vCode ? 'rgba(42,187,103,1)' : 'rgba(42,187,103,0.5)';
-    }
+    return firstName && lastName && email && phoneNum && password && confirmPassword
+      ? 'rgba(42,187,103,1)'
+      : 'rgba(42,187,103,0.5)';
   };
 
   const signInTextColor = () => {
-    if (useEmail) {
-      return firstName && lastName && email && password && confirmPassword ? 'white' : 'rgba(255,255,255,0.3)';
-    } else {
-      return firstName && lastName && phoneNum && vCode ? 'white' : 'rgba(255,255,255,0.3)';
-    }
+    return firstName && lastName && email && phoneNum && password && confirmPassword
+      ? 'white'
+      : 'rgba(255,255,255,0.3)';
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <StatusBar barStyle="light-content" animated />
-      
-      {/* Tabs for Email and Phone Registration */}
-      <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 16 }}>
-        <TouchableOpacity
-          onPress={() => setUseEmail(true)}
-          style={{
-            flex: 1,
-            paddingVertical: 12,
-            borderBottomWidth: 2,
-            borderBottomColor: useEmail ? '#2ABB67' : 'lightgray',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: useEmail ? '#2ABB67' : 'gray', fontWeight: useEmail ? 'bold' : 'normal' }}>
-            Register with Email
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setUseEmail(false)}
-          style={{
-            flex: 1,
-            paddingVertical: 12,
-            borderBottomWidth: 2,
-            borderBottomColor: !useEmail ? '#2ABB67' : 'lightgray',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: !useEmail ? '#2ABB67' : 'gray', fontWeight: !useEmail ? 'bold' : 'normal' }}>
-            Register with Phone Number
-          </Text>
-        </TouchableOpacity>
-      </View>
 
       <KeyboardAwareScrollView
         style={{ flex: 1 }}
@@ -111,72 +96,57 @@ const Register = () => {
           onChangeText={setLastName}
         />
 
-        {useEmail ? (
-          <Animatable.View ref={emailView} style={{ height: 150 }}>
-            <CommonTextInput
-              leftTitle="Email"
-              placeholder="Enter E-mail address"
-              placeholderTextColor="lightgray"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              keyboardType="email-address"
-              onChangeText={setEmail}
-            />
-            <CommonTextInput
-              leftTitle="Password"
-              placeholder="Enter Password"
-              placeholderTextColor="lightgray"
-              autoCapitalize="none"
-              autoCorrect={false}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-            <CommonTextInput
-              leftTitle="Confirm"
-              placeholder="Confirm Password"
-              placeholderTextColor="lightgray"
-              autoCapitalize="none"
-              autoCorrect={false}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
-          </Animatable.View>
-        ) : (
-          <Animatable.View ref={phoneView} style={{ height: 100 }}>
-            <CommonTextInput
-              leftTitle="Phone"
-              placeholder="Enter mobile number"
-              placeholderTextColor="lightgray"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="numeric"
-              value={phoneNum}
-              onChangeText={(text) => setPhoneNum(text.replace(/[^0-9]/g, ''))}
-            />
-            <CommonTextInput
-              leftTitle="SMS Code"
-              rightTitle={showCount ? `Resend after ${count}s` : 'Send'}
-              onRightClick={() => canSendVCode}
-              placeholder="Enter verification code"
-              placeholderTextColor="lightgray"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="numeric"
-              value={vCode}
-              onChangeText={(text) => setVCode(text.replace(/[^0-9]/g, ''))}
-            />
-          </Animatable.View>
-        )}
-        
-        <ZIPText
-          style={{ color: '#2ABB67', marginTop: 8, marginLeft: 8, fontSize: 16 }}
-          onPress={() => setUseEmail(!useEmail)}
-        >
-          Use {useEmail ? 'Mobile number' : 'Email'} to register
-        </ZIPText>
+        {/* Email Field */}
+        <Animatable.View style={{ height: 250 }}>
+          <CommonTextInput
+            leftTitle="Email"
+            placeholder="Enter E-mail address"
+            placeholderTextColor="lightgray"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            keyboardType="email-address"
+            onChangeText={setEmail}
+          />
+
+          {/* Phone Number Field */}
+          <CommonTextInput
+            leftTitle="Phone Number"
+            placeholder="Enter Phone Number"
+            placeholderTextColor="lightgray"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="phone-pad"
+            value={phoneNum}
+            onChangeText={(text) => setPhoneNum(text.replace(/[^0-9]/g, ''))}
+          />
+
+          {/* Password Fields */}
+          <CommonTextInput
+            leftTitle="Password"
+            placeholder="Enter Password"
+            placeholderTextColor="lightgray"
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry={!showPassword}
+            rightTitle={showPassword ? 'Hide' : 'Show'}
+            onRightClick={() => setShowPassword(!showPassword)}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <CommonTextInput
+            leftTitle="Confirm Password"
+            placeholder="Confirm Password"
+            placeholderTextColor="lightgray"
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry={!showConfirmPassword}
+            rightTitle={showConfirmPassword ? 'Hide' : 'Show'}
+            onRightClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+        </Animatable.View>
 
         <TouchableOpacity
           style={{
@@ -188,6 +158,7 @@ const Register = () => {
             marginTop: 16,
           }}
           activeOpacity={1}
+          onPress={handleSignUp}
         >
           <ZIPText style={{ fontSize: 18, color: signInTextColor() }}>Sign Up</ZIPText>
         </TouchableOpacity>
