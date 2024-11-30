@@ -6,34 +6,42 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch, useAppSelector } from '../store';
+import { updateUserProfile } from '../features/userInfoSlice';
 
 const PersonalInformation: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const dispatch = useAppDispatch();
+  const { profile, member, accessToken, memberId } = useAppSelector((state) => state.userInfo);
+
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
-  const { profile, member } = useAppSelector((state) => state.userInfo);
 
   const [personalInfo, setPersonalInfo] = useState({
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-    nickname: profile.nickName,
-    email: member.email,
-    phone: member.phone,
+    firstName: profile.firstName || '',
+    lastName: profile.lastName || '',
+    nickname: profile.nickName || '',
+    email: member.email || '',
+    phone: member.phone || '',
   });
 
   const [address] = useState({
-    addressLine1: profile.addressLine1,
-    addressLine2: profile.addressLine2,
-    city: profile.city,
-    state: profile.state,
-    postalCode: profile.zipcode,
+    addressLine1: profile.addressLine1 || '',
+    addressLine2: profile.addressLine2 || '',
+    city: profile.city || '',
+    state: profile.state || '',
+    postalCode: profile.zipcode || '',
   });
 
   const toggleEditingPersonal = () => {
+    if (isEditingPersonal) {
+      console.log("EDTING PERSONEL STUFF")
+      handleEditProfile();
+    }
     setIsEditingPersonal(!isEditingPersonal);
   };
 
@@ -49,6 +57,61 @@ const PersonalInformation: React.FC = () => {
     const { addressLine1, addressLine2, city, state, postalCode } = address;
     return `${addressLine1} ${addressLine2 ? addressLine2 + ',' : ''} ${city}, ${state}, ${postalCode}`;
   };
+
+  const handleEditProfile = async () => {
+    if (!accessToken || !memberId) {
+      Alert.alert('Error', 'Access token or member ID is missing. Please log in again.');
+      return;
+    }
+  
+    try {
+      const payload: Partial<{
+        _accessToken: string;
+        _memberId: string;
+        nickName?: string;
+        firstName?: string;
+        lastName?: string;
+        houseHolderMember?: string;
+        state?: string;
+        city?: string;
+        zipcode?: string;
+        addressLine1?: string;
+        addressLine2?: string;
+        phone?: string;
+        email?: string;
+        birth?: string;
+        sex?: string;
+        avatar?: string;
+        username?: string;
+      }> = {
+        _accessToken: accessToken,
+        _memberId: memberId,
+      };
+  
+      Object.keys(personalInfo).forEach((key) => {
+        const currentValue = personalInfo[key as keyof typeof personalInfo];
+        const originalValue = profile[key as keyof typeof profile] || member[key as keyof typeof member];
+        if (currentValue !== originalValue) {
+          if (key != 'avatar') {
+            payload[key as keyof typeof payload] = currentValue;
+          }
+        }
+      });
+  
+      if (Object.keys(payload).length > 2) {
+        const resultAction = await dispatch(updateUserProfile(payload as Required<typeof payload>)).unwrap();
+        Alert.alert('Success', 'Profile updated successfully');
+        console.log('Updated Profile:', resultAction);
+      } else {
+        Alert.alert('No Changes', 'No changes were made to your profile.');
+      }
+    } catch (error) {
+      console.error('Error updating profile Personal INfo:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
+  };
+  
+    
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>

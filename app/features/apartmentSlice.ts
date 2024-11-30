@@ -91,14 +91,37 @@ export const fetchUnitList = createAsyncThunk(
 
       try {
         const response = await apartmentApi.bindApartment({accessToken, memberId, apartmentId, unitId})
-        const { ret, data, msg } = response.data;
+        console.log(response);
+        const { ret, data, msg } = response;
   
         console.log('++++++++++++++++++++++++++++++++++++');
         console.log("ret: ", ret);
         console.log('msg: ', msg);
-        console.log('Unit List Response:', data);
+        console.log('sub APT Response:', data);
       } catch (error: any) {
-        console.error('Error fetching unit list:', error.message);
+        console.error('Error sub to APT:', error.message);
+      }
+    }
+  )
+
+  export const unsubscribeApartment = createAsyncThunk(
+    'apartment/unsubscribeApartment',
+    async (apartmentid: string, thunkAPI) => {
+      const state: any = thunkAPI.getState();
+      const { accessToken, memberId } = state.userInfo;
+      const apartmentId = apartmentid;
+
+      try {
+        const response = await apartmentApi.unsubscribeApartment({accessToken, memberId, apartmentId})
+        console.log(response);
+        const { ret, data, msg } = response;
+  
+        console.log('+_+_++_+++_+_++_+_+_+_+_+++_');
+        console.log("ret: ", ret);
+        console.log('msg: ', msg);
+        console.log('unsub APT Response:', data);
+      } catch (error: any) {
+        console.error('Error sub to APT:', error.message);
       }
     }
   )

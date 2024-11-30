@@ -74,7 +74,65 @@ export const profileApi = {
             throw error;
         }
     },
-    
+    updateProfile: async (profileData: {
+        _accessToken: string;
+        _memberId: string;
+        nickName?: string;
+        firstName?: string;
+        lastName?: string;
+        householderMember?: string;
+        state?: string;
+        city?: string;
+        zipcode?: string;
+        addressline1?: string;
+        addressline2?: string;
+        phone?: string;
+        email?: string;
+        birth?: string; // Ensure proper format: YYYYMMDD or YYYY-MM-DD
+        sex?: string; // "1" for male, "2" for female
+        avatar?: string; // Assuming the avatar is a File object
+        username?: string;
+    }) => {
+        const payload = new FormData();
+
+        // Append required fields
+        payload.append('_accessToken', profileData._accessToken);
+        payload.append('_memberId', profileData._memberId);
+
+        // Append optional fields if they are provided
+        if (profileData.nickName) payload.append('nickName', profileData.nickName);
+        if (profileData.firstName) payload.append('firstName', profileData.firstName);
+        if (profileData.lastName) payload.append('lastName', profileData.lastName);
+        if (profileData.householderMember) payload.append('householderMember', profileData.householderMember);
+        if (profileData.state) payload.append('state', profileData.state);
+        if (profileData.city) payload.append('city', profileData.city);
+        if (profileData.zipcode) payload.append('zipcode', profileData.zipcode);
+        if (profileData.addressline1) payload.append('addressline1', profileData.addressline1);
+        if (profileData.addressline2) payload.append('addressline2', profileData.addressline2);
+        if (profileData.phone) payload.append('phone', profileData.phone);
+        if (profileData.email) payload.append('email', profileData.email);
+        if (profileData.birth) payload.append('birth', profileData.birth);
+        if (profileData.sex) payload.append('sex', profileData.sex);
+        if (profileData.avatar) payload.append('avatar', profileData.avatar);
+        if (profileData.username) payload.append('username', profileData.username);
+
+        const requestURL = API_ENDPOINTS.PROFILE.UPDATE;
+        try {
+            const response = await apiClient.post(
+                requestURL, // Replace with actual API endpoint
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data', // Ensure correct handling of form data
+                    },
+                }
+            );
+            return response.data; // Assume the response contains success status
+        } catch (error: any) {
+            console.error('Error updating profile API service:', error.message);
+            throw error;
+        }
+    },
 };
 
 // Example: Apartment API Calls
@@ -103,7 +161,7 @@ export const apartmentApi = {
         
         return apiClient.get(`${API_ENDPOINTS.ZIP.GET_UNIT_LIST}?${params.toString()}`);
     },
-    bindApartment: async (credentials: { accessToken: string; memberId: string, apartmentId: string, unitId: string }) => {
+    bindApartment: async (credentials: { accessToken: string, memberId: string, apartmentId: string, unitId: string }) => {
         let requestURL = API_ENDPOINTS.ZIP.BIND_APT;
         const params = new URLSearchParams({
             _accessToken: credentials.accessToken,
@@ -122,6 +180,24 @@ export const apartmentApi = {
             throw error;
         }
     },
+    unsubscribeApartment: async (credentials: {accessToken: string, memberId: string, apartmentId: string}) => {
+        let requestURL = API_ENDPOINTS.ZIP.CANCEL_APT;
+        const params = new URLSearchParams({
+            _accessToken: credentials.accessToken,
+            _memberId: credentials.memberId,
+            apartmentId: credentials.apartmentId,
+        })
+
+        requestURL += `?${params.toString()}`;
+
+        try {
+            const response = await apiClient.get(requestURL);
+            return response.data; // Assume the response structure matches expectations
+        } catch (error: any) {
+            console.error('Error unsubscribe APT: ', error.message);
+            throw error;
+        }
+    }
 };
 
 export const zipporaApi = {

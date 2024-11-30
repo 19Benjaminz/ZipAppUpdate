@@ -27,12 +27,11 @@ export const API_ENDPOINTS = {
       GET_PRICE: 'store/getStorePrice',
     },
     PROFILE: {
-      UPDATE: 'Address/insertAddress',
+      UPDATE: 'Profile/updateProfile',
       SWITCH_SERVICE_MODE: 'member/switchServiceMode',
       GET_MEMBER: 'member/getMember',
       GET_STATEMENT_LIST: 'statement/getStatementList',
       GET_CREDIT_CARD_LIST: 'CardCredit/getCardCreditList',
-      MODIFY: 'Profile/updateProfile',
       GET_STATE_LIST: 'state/getStateList',
       GET_TRANSACTION_LIST: 'transaction/getTransactionList',
     },

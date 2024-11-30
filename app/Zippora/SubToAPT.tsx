@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../store';
 import { fetchApartmentList, fetchUnitList } from '../features/apartmentSlice';
 import { bindApartment } from '../features/apartmentSlice';
+import { RootStackParamList } from '@/components/types';
 
 interface Apartment {
   id: string;
@@ -24,6 +26,7 @@ interface Unit {
 }
 
 const SubToAPT = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [zipcode, setZipcode] = useState('');
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -115,6 +118,7 @@ const SubToAPT = () => {
         console.log("Bind Apartment Result:", resultAction);
   
         Alert.alert("Success", "You have successfully subscribed to the unit.");
+        navigation.navigate('Zippora/ZipporaHome');
       } catch (error) {
         console.error("Error binding apartment:", error);
         Alert.alert("Error", "Failed to subscribe to the apartment. Please try again.");

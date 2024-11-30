@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Alert,
@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import ZIPText from '../../components/ZIPText';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -63,16 +63,15 @@ const ZipporaHome: React.FC = () => {
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    fetchUserData();
-    fetchZipporaData();
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+      fetchZipporaData();
+    }, [dispatch])
+  );
 
-  const handleUpdatePrompt = () => {
-    Alert.alert('Update Available', 'Please update to access the latest features.', [
-      { text: 'Cancel' },
-      { text: 'Update', onPress: () => Linking.openURL('app_link') },
-    ]);
+  const handleAPTInfo = () => {
+    navigation.navigate('Zippora/ZipporaInfo')
   };
 
   const handleSubscribeNavigation = () => {
@@ -88,7 +87,7 @@ const ZipporaHome: React.FC = () => {
     >
       {apartmentList.map((apt) => (
         <React.Fragment key={apt.apartmentId}>
-          <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={handleUpdatePrompt}>
+          <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={handleAPTInfo}>
             <Image source={require('../../assets/images/room.png')} style={styles.image} />
             <View style={styles.infoContainer}>
               <ZIPText style={styles.title}>{apt.apartmentName} </ZIPText>

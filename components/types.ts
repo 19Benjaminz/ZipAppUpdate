@@ -14,4 +14,5 @@ export type RootStackParamList = {
     "Profile/PersonalInfo": undefined;
     "Profile/ModifyAddress": undefined;
     "Zippora/SubToAPT": undefined;
+    "Zippora/ZipporaInfo": undefined;
   };

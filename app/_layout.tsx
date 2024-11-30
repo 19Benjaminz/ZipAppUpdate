@@ -15,6 +15,7 @@ import AboutUs from './Profile/AboutUs';
 import ModifyAddress from './Profile/ModifyAddress';
 import PersonalInfo from './Profile/PersonalInfo';
 import SubToAPT from './Zippora/SubToAPT';
+import ZipporaInfo from './Zippora/ZipporaInfo';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -97,6 +98,11 @@ export default function RootLayout() {
             name="Zippora/SubToAPT"
             component={SubToAPT}
             options={{ title: 'Subscribe to Apartment', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Zippora/ZipporaInfo"
+            component={ZipporaInfo}
+            options={{ title: 'Property Locker Info', headerShown: true }}
           />
           {/* <Stack.Screen name="Login/AddAddress" component={AddAddress} /> */}
           {/* <Stack.Screen name="+not-found" component={HomeScreen} /> */}

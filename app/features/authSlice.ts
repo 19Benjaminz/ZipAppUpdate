@@ -53,7 +53,7 @@ export const register = createAsyncThunk(
         try {
             const response = await authApi.register(credentials);
             const { ret, data, msg } = response.data;
-            console.log(ret)
+            console.log(response)
             console.log(data)
             console.log(msg)
 
