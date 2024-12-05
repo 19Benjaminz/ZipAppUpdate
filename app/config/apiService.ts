@@ -1,6 +1,7 @@
-import { sendVcode } from '../features/authSlice';
+import { createElement } from 'react';
 import apiClient from './apiClient';
 import { API_ENDPOINTS } from './endpoints';
+import { changePassword } from '../features/userInfoSlice';
 
 // Example: Authentication API Calls
 export const authApi = {
@@ -31,10 +32,7 @@ export const authApi = {
             headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
         });
     },
-    forgetPassword: async (email: string) => {
-        return apiClient.post(API_ENDPOINTS.LOGIN.FORGET_PASSWORD, { email });
-    },
-    sendVcode: async (email: string, flag: string = '') => {
+    sendRegisterVcode: async (email: string, flag: string = '') => {
         const requestURL = API_ENDPOINTS.LOGIN.SEND_VCODE;
         console.log("Email for registration: ", email);
     
@@ -48,6 +46,23 @@ export const authApi = {
             headers: {
                 'Content-Type': 'multipart/form-data', // Explicitly specify content type
             },
+        });
+    },
+    resetPassword: async (credentials: { memberId: string, psd1: string; psd2: string; vcode: string }) => {
+        const payload = new FormData();
+        payload.append('memberId', credentials.memberId);
+        payload.append('psd1', credentials.psd1);
+        payload.append('psd2', credentials.psd2);
+        payload.append('vcode', credentials.vcode);
+        return apiClient.post(API_ENDPOINTS.LOGIN.RESET_PASSWORD, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
+        });
+    },
+    sendForgotPasswordVcode: async (email: string) => {
+        const payload = new FormData();
+        payload.append('email', email);
+        return apiClient.post(API_ENDPOINTS.LOGIN.FORGOT_PASSWORD_VCODE, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
         });
     },
 };
@@ -130,6 +145,26 @@ export const profileApi = {
             return response.data; // Assume the response contains success status
         } catch (error: any) {
             console.error('Error updating profile API service:', error.message);
+            throw error;
+        }
+    },
+    changePassword: async (credentials: { accessToken: string; memberId: string; oldPsd: string; psd1: string; psd2: string }, needLogin = true) => {
+        const payload = new FormData();
+        if (needLogin) {
+            payload.append('_accessToken', credentials.accessToken);
+            payload.append('_memberId', credentials.memberId);
+            payload.append('oldPsd', credentials.oldPsd);
+            payload.append('psd1', credentials.psd1);
+            payload.append('psd2', credentials.psd2);
+            console.log(payload);
+        }
+    
+        try {
+            return apiClient.post(API_ENDPOINTS.LOGIN.CHANGE_PASSWORD, payload, {
+                headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
+            });
+        } catch (error: any) {
+            console.error('Error fetching member information:', error.message);
             throw error;
         }
     },
@@ -220,4 +255,52 @@ export const zipporaApi = {
           throw error;
         }
     },
+    getZipporaLogs: async (credentials: { accessToken: string; memberId: string }) => {
+        const params = new URLSearchParams();
+        params.append('_accessToken', credentials.accessToken);
+        params.append('_memberId', credentials.memberId);
+    
+        const requestURL = `${API_ENDPOINTS.STORE.GET_LIST}?${params.toString()}`;
+        try {
+          const response = await apiClient.get(requestURL);
+          console.log(response);
+    
+          if (response.data.ret === 0) {
+            return response.data; // Successful response
+          } else {
+            throw new Error(response.data.msg || 'Failed to fetch ZIPPORA LOGS');
+          }
+        } catch (error: any) {
+          console.error('Error fetching ZIPPORA LOGS:', error.message);
+          throw error;
+        }
+    },
+    qrCodeScan: async (credentials: { accessToken: string; memberId: string, text: string}) => {
+        const params = new URLSearchParams();
+        params.append('_accessToken', credentials.accessToken);
+        params.append('_memberId', credentials.memberId);
+        params.append('text', credentials.text);
+
+        const requestURL = `${API_ENDPOINTS.QRCODE.SCAN}?${params.toString()}`;
+        try {
+            const response = await apiClient.get(requestURL);
+            console.log(response);
+      
+            if (response.data.ret === 0) {
+              return response.data; // Successful response
+            } else if (response.data.ret === 2) {
+              throw new Error(response.data.msg || 'Empty Scan text');
+            } else if (response.data.ret === 3) {
+                throw new Error(response.data.msg || 'Not Supported QR code');
+            } else if (response.data.ret === 4) {
+                throw new Error(response.data.msg || 'QR code Expired');
+            } else {
+                throw new Error(response.data.msg || 'QR code Fail to SCAN due to unexpected error');
+            }
+            
+          } catch (error: any) {
+            console.error('Error Scanning QRcode', error.message);
+            throw error;
+          }
+    }
 };

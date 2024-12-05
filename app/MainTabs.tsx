@@ -48,18 +48,18 @@ export default function MainTabs() {
             
             <Tab.Screen
                 name="BarcodeScan"
-                component={BarcodeScan}
+                children={() => <BarcodeScan key={Math.random()} />} // Add a unique key to force remount
                 options={{
                     tabBarButton: (props) => (
-                        <TouchableOpacity
-                            {...props}
-                            style={styles.cameraButtonContainer}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.cameraButton}>
-                                <Icon name="camera" type="material" color="white" size={28} />
-                            </View>
-                        </TouchableOpacity>
+                    <TouchableOpacity
+                        {...props}
+                        style={styles.cameraButtonContainer}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.cameraButton}>
+                        <Icon name="camera" type="material" color="white" size={28} />
+                        </View>
+                    </TouchableOpacity>
                     ),
                 }}
             />
@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     cameraButton: {
         width: 60,
         height: 60,
+        marginBottom: 40,
         borderRadius: 30,
         backgroundColor: 'green',
         justifyContent: 'center',

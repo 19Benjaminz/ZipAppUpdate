@@ -129,8 +129,8 @@ export const updateUserProfile = createAsyncThunk(
         state?: string;
         city?: string;
         zipcode?: string;
-        addressLine1?: string;
-        addressLine2?: string;
+        addressline1?: string;
+        addressline2?: string;
         phone?: string;
         email?: string;
         birth?: string; // Ensure proper format: YYYYMMDD or YYYY-MM-DD
@@ -147,11 +147,13 @@ export const updateUserProfile = createAsyncThunk(
         // Ensure required fields are added
         profileData._accessToken = accessToken;
         profileData._memberId = memberId;
+        console.log("Profile Data: ", profileData);
   
         const response = await profileApi.updateProfile(profileData);
+        console.log(response)
         const { ret, msg } = response;
   
-        if (ret === '0') {
+        if (ret === 0) {
           console.log('Profile update successful:', msg);
           // Return only the submitted profile data
           return profileData;
@@ -165,7 +167,32 @@ export const updateUserProfile = createAsyncThunk(
       }
     }
   );
+
+  export const changePassword = createAsyncThunk(
+    'userInfo/changePassword',
+    async (credentials: { oldPsd: string; psd1: string; psd2: string }, thunkAPI) => {
+      try {
+        const state: any = thunkAPI.getState();
+        const { accessToken, memberId } = state.userInfo;
+
+        const response = await profileApi.changePassword({ accessToken, memberId, ...credentials });
+        const { ret, data, msg } = response.data;
+        console.log("Change Password ret:", ret)
+        console.log("Change Password Data:", data)
+        console.log("Change Password msg:", msg)
   
+        if (ret === 0) {
+          return data;
+        } else {
+          return thunkAPI.rejectWithValue(msg || 'Failed to change password');
+        }
+      } catch (error: any) {
+        return thunkAPI.rejectWithValue(
+          error.response?.data?.message || 'Unexpected error occurred'
+        );
+      }
+    }
+  );
 
 const dataSlice = createSlice({
   name: 'userData',

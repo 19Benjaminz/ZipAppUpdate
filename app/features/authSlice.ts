@@ -13,19 +13,6 @@ const initialState: AuthState = {
     user: null,
 };
 
-// export const login = createAsyncThunk(
-//     'auth/login',
-//     async (credentials: { email?: string; phoneNum?: string; password: string }, thunkAPI) => {
-//         try {
-//             console.log("********WAITING***************")
-//             const response = await authApi.login(credentials);
-//             return response.data;
-//         } catch (error: any) {
-//             return thunkAPI.rejectWithValue(error.response?.data?.message || 'Login failed');
-//         }
-//     }
-// );
-
 export const login = createAsyncThunk(
     'auth/login',
     async (credentials: { email?: string; phoneNum?: string; password: string }, thunkAPI) => {
@@ -71,11 +58,11 @@ export const register = createAsyncThunk(
     }
 );
 
-export const sendVcode = createAsyncThunk(
+export const sendRegisterVcode = createAsyncThunk(
     'auth/sendVcode',
     async (email: string, { rejectWithValue }) => {
       try {
-        const response = await authApi.sendVcode(email, '');
+        const response = await authApi.sendRegisterVcode(email, '');
         const { ret, data, msg } = response.data;
   
         if (ret === 0) {
@@ -88,6 +75,50 @@ export const sendVcode = createAsyncThunk(
       }
     }
 );
+
+export const sendForgotPasswordVcode = createAsyncThunk(
+    'auth/sendForgotPasswordVcode',
+    async (email: string, { rejectWithValue }) => {
+      try {
+        const response = await authApi.sendForgotPasswordVcode(email);
+        const { ret, data, msg } = response.data;
+        console.log('send forgot password vcode', response.data);
+  
+        if (ret === 0) {
+          return data; // Return the data if successful
+        } else {
+          return rejectWithValue(msg || "Failed to send verification code");
+        }
+      } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Unexpected error occurred");
+      }
+    }
+);
+
+export const resetPassword = createAsyncThunk (
+    'userInfo/modifyPassword',
+    async (credentials: { memberId: string, psd1: string; psd2: string; vcode: string }, thunkAPI) => {
+        try {
+            console.log(credentials);
+            const response = await authApi.resetPassword(credentials);
+            const { ret, data, msg } = response.data;
+            console.log(ret)
+            console.log(data)
+            console.log(msg)
+
+            if (ret === 0) {
+                // Successful register
+                return response.data;
+            } else {
+                // Reject with the error message from the API
+                return thunkAPI.rejectWithValue(msg || 'Reset Password failed');
+            }
+        } catch (error: any) {
+            // Handle other unexpected errors
+            return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+        }
+    }
+  )
 
 
 const authSlice = createSlice({

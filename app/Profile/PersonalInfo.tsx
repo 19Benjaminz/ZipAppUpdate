@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch, useAppSelector } from '../store';
-import { updateUserProfile } from '../features/userInfoSlice';
+import { getUser, updateUserProfile } from '../features/userInfoSlice';
 
 const PersonalInformation: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -24,12 +24,12 @@ const PersonalInformation: React.FC = () => {
   const [personalInfo, setPersonalInfo] = useState({
     firstName: profile.firstName || '',
     lastName: profile.lastName || '',
-    nickname: profile.nickName || '',
+    nickName: profile.nickName || '',
     email: member.email || '',
     phone: member.phone || '',
   });
 
-  const [address] = useState({
+  const [address, setAddress] = useState({
     addressLine1: profile.addressLine1 || '',
     addressLine2: profile.addressLine2 || '',
     city: profile.city || '',
@@ -37,9 +37,43 @@ const PersonalInformation: React.FC = () => {
     postalCode: profile.zipcode || '',
   });
 
+  const refreshData = useCallback(async () => {
+    try {
+      if (accessToken && memberId) {
+        await dispatch(getUser({ accessToken, memberId })).unwrap();
+        console.log('Profile data refreshed');
+      }
+    } catch (error) {
+      console.error('Error refreshing profile data:', error);
+    }
+  }, [accessToken, memberId, dispatch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshData();
+    }, [refreshData])
+  );
+
+  useEffect(() => {
+    setPersonalInfo({
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      nickName: profile.nickName || '',
+      email: member.email || '',
+      phone: member.phone || '',
+    });
+
+    setAddress({
+      addressLine1: profile.addressLine1 || '',
+      addressLine2: profile.addressLine2 || '',
+      city: profile.city || '',
+      state: profile.state || '',
+      postalCode: profile.zipcode || '',
+    });
+  }, [profile, member]);
+
   const toggleEditingPersonal = () => {
     if (isEditingPersonal) {
-      console.log("EDTING PERSONEL STUFF")
       handleEditProfile();
     }
     setIsEditingPersonal(!isEditingPersonal);
@@ -53,9 +87,13 @@ const PersonalInformation: React.FC = () => {
     navigation.navigate('Profile/ModifyAddress');
   };
 
+  const handleModifyPassword = () => {
+    navigation.navigate('Profile/ModifyPassword');
+  };
+
   const formatAddress = () => {
     const { addressLine1, addressLine2, city, state, postalCode } = address;
-    return `${addressLine1} ${addressLine2 ? addressLine2 + ',' : ''} ${city}, ${state}, ${postalCode}`;
+    return `${addressLine1 + ', '} ${addressLine2 ? addressLine2 + ', ' : ''} ${city}, ${state}, ${postalCode}`;
   };
 
   const handleEditProfile = async () => {
@@ -63,7 +101,7 @@ const PersonalInformation: React.FC = () => {
       Alert.alert('Error', 'Access token or member ID is missing. Please log in again.');
       return;
     }
-  
+
     try {
       const payload: Partial<{
         _accessToken: string;
@@ -87,55 +125,45 @@ const PersonalInformation: React.FC = () => {
         _accessToken: accessToken,
         _memberId: memberId,
       };
-  
+
       Object.keys(personalInfo).forEach((key) => {
         const currentValue = personalInfo[key as keyof typeof personalInfo];
         const originalValue = profile[key as keyof typeof profile] || member[key as keyof typeof member];
         if (currentValue !== originalValue) {
-          if (key != 'avatar') {
-            payload[key as keyof typeof payload] = currentValue;
-          }
+          payload[key as keyof typeof payload] = currentValue;
         }
       });
-  
+
       if (Object.keys(payload).length > 2) {
         const resultAction = await dispatch(updateUserProfile(payload as Required<typeof payload>)).unwrap();
         Alert.alert('Success', 'Profile updated successfully');
         console.log('Updated Profile:', resultAction);
+        navigation.navigate('Zippora/ZipporaHome');
       } else {
         Alert.alert('No Changes', 'No changes were made to your profile.');
       }
     } catch (error) {
-      console.error('Error updating profile Personal INfo:', error);
+      console.error('Error updating profile:', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     }
   };
-  
-    
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       {/* Personal Information Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Personal Information</Text>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={toggleEditingPersonal}
-        >
-          <Text style={styles.editButtonText}>
-            {isEditingPersonal ? 'Save' : 'Edit'}
-          </Text>
+        <TouchableOpacity style={styles.editButton} onPress={toggleEditingPersonal}>
+          <Text style={styles.editButtonText}>{isEditingPersonal ? 'Save' : 'Edit'}</Text>
         </TouchableOpacity>
         {Object.entries(personalInfo).map(([key, value]) => (
           <View key={key} style={styles.fieldContainer}>
-            <Text style={styles.label}>
-              {key.replace(/^\w/, (c) => c.toUpperCase())}
-            </Text>
+            <Text style={styles.label}>{key.replace(/^\w/, (c) => c.toUpperCase())}</Text>
             <TextInput
               style={[styles.input, !isEditingPersonal && styles.disabledInput]}
               value={value}
               onChangeText={(text) => handleInputChange(key, text)}
-              editable={key !== 'email' && isEditingPersonal} // Email is not editable
+              editable={key !== 'email' && isEditingPersonal}
             />
           </View>
         ))}
@@ -144,10 +172,7 @@ const PersonalInformation: React.FC = () => {
       {/* Address Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Address</Text>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={handleEditAddress}
-        >
+        <TouchableOpacity style={styles.editButton} onPress={handleEditAddress}>
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
         <Text style={styles.addressText}>{formatAddress()}</Text>
@@ -155,7 +180,7 @@ const PersonalInformation: React.FC = () => {
 
       {/* Account Actions Section */}
       <View style={styles.section}>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleModifyPassword}>
           <Text style={styles.actionButtonText}>Modify Password</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.logoutButton]}>

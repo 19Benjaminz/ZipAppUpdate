@@ -7,9 +7,9 @@ import { useAppDispatch } from '../store';
 import { register } from '../features/authSlice';
 import { setAccessToken, setMemberId } from '../features/userInfoSlice';
 
-type VerificationPageRouteProp = RouteProp<RootStackParamList, 'Login/VerificationPage'>;
+type VerificationPageRouteProp = RouteProp<RootStackParamList, 'Login/RegistrationVerificationPage'>;
 
-const VerificationPage = () => {
+const RegistrationVerificationPage = () => {
   const [verificationCode, setVerificationCode] = useState(''); // State for verification code
   const route = useRoute<VerificationPageRouteProp>();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -175,4 +175,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VerificationPage;
+export default RegistrationVerificationPage;

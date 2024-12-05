@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,11 +8,12 @@ import {
     RefreshControl,
     StyleSheet,
 } from 'react-native';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
 import { RootStackParamList } from '../../components/types';
-import { useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '../store';
+import { getUser } from '../features/userInfoSlice';
 
 interface ProfileItemProps {
     title: string;
@@ -32,25 +33,29 @@ const ProfileItem: React.FC<ProfileItemProps> = ({ title, subtitle, icon, onPres
 
 const Profile: React.FC = () => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+    const dispatch = useAppDispatch();
+    const isFocused = useIsFocused(); // React Navigation hook to detect screen focus
     const [loading, setLoading] = useState(false);
-    const { profile, member } = useAppSelector((state) => state.userInfo);
+    const { profile, member, accessToken, memberId } = useAppSelector((state) => state.userInfo);
 
-    const [personalInfo] = useState<any>({
-        profile: {
-            nickName: profile.nickName,
-            avatar: '',
-        },
-        member: {
-            phone: member.phone,
-        },
-    });
-
-    const handleRefresh = () => {
-        setLoading(true);
-        setTimeout(() => setLoading(false), 1500); // Simulate loading data
+    const handleRefresh = async () => {
+        try {
+            setLoading(true); // Start loading
+            await dispatch(getUser({ accessToken, memberId })).unwrap(); // Ensure the API resolves properly
+        } catch (error) {
+            console.error('Error refreshing profile data:', error);
+        } finally {
+            setLoading(false); // End loading regardless of success or failure
+        }
     };
 
-    const handleNavigation = (screen: keyof RootStackParamList) => {
+    useEffect(() => {
+        if (isFocused) {
+            handleRefresh(); // Refresh the data when the screen is focused
+        }
+    }, [isFocused]); // Dependency ensures it runs only when `isFocused` changes
+
+    const handleNavigation = (screen: any) => {
         navigation.navigate(screen);
     };
 
@@ -61,8 +66,13 @@ const Profile: React.FC = () => {
                 icon: require('../../assets/images/aboutus.png'),
                 screen: 'Profile/AboutUs' as keyof RootStackParamList,
             },
+            {
+                title: 'Zippora Logs',
+                icon: require('../../assets/images/zipporalog.png'), // Replace with the correct icon path
+                screen: 'Zippora/ZipLogs' as keyof RootStackParamList,
+            },
         ];
-
+    
         return items.map((item, index) => (
             <ProfileItem
                 key={index}
@@ -71,7 +81,7 @@ const Profile: React.FC = () => {
                 onPress={() => handleNavigation(item.screen)}
             />
         ));
-    };
+    };    
 
     return (
         <View style={styles.container}>
@@ -79,14 +89,14 @@ const Profile: React.FC = () => {
                 style={styles.scrollContainer}
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={handleRefresh} />}
             >
-                <TouchableOpacity style={styles.profileContainer} onPress={() => handleNavigation("Profile/PersonalInfo")}>
+                <TouchableOpacity style={styles.profileContainer} onPress={() => handleNavigation('Profile/PersonalInfo')}>
                     <Image
-                        source={personalInfo?.profile?.avatar ? { uri: personalInfo.profile.avatar } : require('../../assets/images/proimage.png')}
+                        source={profile?.avatar ? { uri: profile.avatar } : require('../../assets/images/proimage.png')}
                         style={styles.avatar}
                     />
                     <View style={styles.profileDetails}>
-                        <ZIPText style={styles.profileName}>{personalInfo.profile.nickName}</ZIPText>
-                        <ZIPText style={styles.profilePhone}>{personalInfo.member.phone}</ZIPText>
+                        <ZIPText style={styles.profileName}>{profile.nickName || 'Guest'}</ZIPText>
+                        <ZIPText style={styles.profilePhone}>{member.phone}</ZIPText>
                     </View>
                     <Icon name="arrow-forward-ios" color={'green'} size={20} />
                 </TouchableOpacity>

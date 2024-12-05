@@ -46,9 +46,19 @@ interface SelfStore {
   storeTime: string;
 }
 
+interface ZipporaLog {
+  storeId: string;
+  courierCompanyName: string;
+  pickCode: string;
+  storeTime: string;
+  pickupTime: string;
+  cabinetId: string;
+}
+
 interface ZipporaState {
   apartmentList: Apartment[];
   selfStoreList: SelfStore[];
+  zipporaLog: ZipporaLog[];
   loading: boolean;
   error: string | null;
 }
@@ -56,6 +66,7 @@ interface ZipporaState {
 const initialState: ZipporaState = {
   apartmentList: [],
   selfStoreList: [],
+  zipporaLog:[],
   loading: false,
   error: null,
 };
@@ -76,6 +87,54 @@ export const fetchUserApartments = createAsyncThunk(
           apartmentList: data.apartmentList,
           selfStoreList: data.StoreList,
         };
+      } else {
+        return thunkAPI.rejectWithValue(msg || 'Failed to fetch apartments');
+      }
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+    }
+  }
+);
+
+export const fetchZipporaLogs = createAsyncThunk(
+  'zippora/fetchZipporaLogs',
+  async (_, thunkAPI) => {
+    const state: any = thunkAPI.getState();
+    const { accessToken, memberId } = state.userInfo;
+    try {
+      const response = await zipporaApi.getZipporaLogs({ accessToken, memberId });
+      const { ret, data, msg } = response;
+      console.log("*****LOGS*****")
+      console.log(ret)
+      console.log(data)
+
+      if (ret === 0) {
+        return {
+          zipporaLogs: data.storeList,
+        };
+      } else {
+        return thunkAPI.rejectWithValue(msg || 'Failed to fetch apartments');
+      }
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+    }
+  }
+);
+
+export const scanQRCode = createAsyncThunk(
+  'zippora/scanQRCode',
+  async (text: string, thunkAPI) => {
+    const state: any = thunkAPI.getState();
+    const { accessToken, memberId } = state.userInfo;
+    try {
+      const response = await zipporaApi.qrCodeScan({ accessToken, memberId, text });
+      const { ret, data, msg } = response;
+      console.log("*****SCANNING QR CODE*****")
+      console.log(ret)
+
+      if (ret === 0) {
+        console.log("SCAN SUCCESS")
+        return ret;
       } else {
         return thunkAPI.rejectWithValue(msg || 'Failed to fetch apartments');
       }
@@ -106,6 +165,25 @@ const zipporaInfoSlice = createSlice({
         }
       )      
       .addCase(fetchUserApartments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string | null;
+      });
+
+      builder
+      .addCase(fetchZipporaLogs.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchZipporaLogs.fulfilled,
+        (state, action: PayloadAction<{ zipporaLogs: ZipporaLog[] }>) => {
+          state.loading = false;
+          state.zipporaLog = action.payload.zipporaLogs || []; // Handle empty or missing selfStoreList
+          console.log('GETCHING LOGS SUCCESS')
+          console.log(state.selfStoreList)
+        }
+      )      
+      .addCase(fetchZipporaLogs.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string | null;
       });

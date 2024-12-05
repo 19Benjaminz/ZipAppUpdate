@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch } from '../store';
-import { sendVcode } from '../features/authSlice';
+import { sendRegisterVcode } from '../features/authSlice';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -30,7 +30,7 @@ const Register = () => {
 
   const sendVcodeAction = async () => {
     try {
-      const result = await dispatch(sendVcode(email)).unwrap();
+      const result = await dispatch(sendRegisterVcode(email)).unwrap();
       console.log("Verification code sent successfully!", result);
     } catch (error) {
       console.error("Failed to send verification code:", error);
@@ -43,7 +43,7 @@ const Register = () => {
       console.log(email);
       await sendVcodeAction();
     }
-    navigation.navigate("Login/VerificationPage", {
+    navigation.navigate("Login/RegistrationVerificationPage", {
       email,
       phoneNum,
       firstName,

@@ -22,7 +22,7 @@ export const API_ENDPOINTS = {
       COMPLAIN: 'pick/complainPick',
     },
     STORE: {
-      GET_LIST: 'store/getStoreList',
+      GET_LIST: 'zippora/getStoreList',
       INSERT: 'store/insertStore',
       GET_PRICE: 'store/getStorePrice',
     },
@@ -43,7 +43,7 @@ export const API_ENDPOINTS = {
     LOGIN: {
       REGISTER: 'login/registern',
       LOGIN: 'login/login',
-      FORGET_PASSWORD: 'login/forgetPsd',
+      FORGOT_PASSWORD_VCODE: 'login/forgetPsd',
       RESET_PASSWORD: 'login/resetPsd',
       VERIFY_ACCOUNT: 'login/verifyAccount',
       RESEND_EMAIL: 'login/reSendEmail',

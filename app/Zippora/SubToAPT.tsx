@@ -12,6 +12,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../store';
 import { fetchApartmentList, fetchUnitList } from '../features/apartmentSlice';
 import { bindApartment } from '../features/apartmentSlice';
+import { updateUserProfile } from '../features/userInfoSlice';
 import { RootStackParamList } from '@/components/types';
 
 interface Apartment {
@@ -34,6 +35,8 @@ const SubToAPT = () => {
     null
   );
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState('');
+  const [selectedUnitName, setSelectedUnitName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const dispatch = useAppDispatch();
@@ -91,13 +94,15 @@ const SubToAPT = () => {
     }
   }, [selectedApartmentId, dispatch]);
 
-  const handleApartmentSelect = (id: string) => {
+  const handleApartmentSelect = (id: string, address: string) => {
     setSelectedApartmentId(selectedApartmentId === id ? null : id);
+    setSelectedAddress(address);
     setSelectedUnitId(null); // Reset selected unit when a new apartment is selected
   };
 
-  const handleUnitSelect = (unitId: string) => {
+  const handleUnitSelect = (unitId: string, unitName: string) => {
     setSelectedUnitId(unitId);
+    setSelectedUnitName(unitName)
   };
 
   const filteredUnits = (units: Unit[]) => {
@@ -110,21 +115,63 @@ const SubToAPT = () => {
   const bindApartmentAction = async () => {
     if (selectedApartmentId && selectedUnitId) {
       try {
-        const resultAction = await dispatch(
+        // Dispatch the bindApartment action
+        const bindApartmentAction = await dispatch(
           bindApartment({ apartmentId: selectedApartmentId, unitId: selectedUnitId })
         ).unwrap();
   
-        // Handle the result
-        console.log("Bind Apartment Result:", resultAction);
+        // Initialize address object
+        const aptAddress = {
+          state: '',
+          city: '',
+          zipcode: '',
+          addressline1: '',
+          addressline2: '',
+        };
   
-        Alert.alert("Success", "You have successfully subscribed to the unit.");
+        // Trim and split the address into parts
+        const addressParts = selectedAddress.split(',').map((part) => part.trim());
+  
+        // Extract last part for country (e.g., "USA")
+        const country = addressParts.pop();
+  
+        // Extract second last part for "State" and "Zipcode"
+        const stateZipMatch = addressParts.pop()?.match(/([A-Z]{2})(?:\s*(\d{5}))?/);
+        if (stateZipMatch) {
+          aptAddress.state = stateZipMatch[1]; // State
+        }
+  
+        // Extract city (now second-to-last part)
+        aptAddress.city = addressParts.pop() || '';
+  
+        // Remaining parts form the addressLine1
+        aptAddress.addressline1 = addressParts.join(', ');
+  
+        // Format addressLine2 with the unit name
+        aptAddress.addressline2 = selectedUnitName ? `Apt ${selectedUnitName}` : '';
+
+        // Zipcode already exist
+        aptAddress.zipcode = zipcode; // Zipcode (optional)
+  
+        console.log('Parsed Address:', aptAddress);
+  
+        // Dispatch the updateUserProfile action with the parsed address
+        const updateAddressAction = await dispatch(
+          updateUserProfile({
+            _accessToken: '',
+            _memberId: '',
+            ...aptAddress,
+          })
+        );
+  
+        Alert.alert('Success', 'You have successfully subscribed to the unit.');
         navigation.navigate('Zippora/ZipporaHome');
       } catch (error) {
-        console.error("Error binding apartment:", error);
-        Alert.alert("Error", "Failed to subscribe to the apartment. Please try again.");
+        console.error('Error binding apartment:', error);
+        Alert.alert('Error', 'Failed to subscribe to the apartment. Please try again.');
       }
     } else {
-      Alert.alert("Error", "Please select an apartment and a unit.");
+      Alert.alert('Error', 'Please select an apartment and a unit.');
     }
   };
 
@@ -162,7 +209,7 @@ const SubToAPT = () => {
                     styles.apartmentCard,
                     selectedApartmentId === item.id && styles.selectedApartment,
                   ]}
-                  onPress={() => handleApartmentSelect(item.id)}
+                  onPress={() => handleApartmentSelect(item.id, item.address)}
                 >
                   <View style={styles.apartmentHeader}>
                     <Text style={styles.apartmentName}>{item.name}</Text>
@@ -191,7 +238,7 @@ const SubToAPT = () => {
                             styles.unitCard,
                             selectedUnitId === unit.unitId && styles.selectedUnit,
                           ]}
-                          onPress={() => handleUnitSelect(unit.unitId)}
+                          onPress={() => handleUnitSelect(unit.unitId, unit.unitName)}
                         >
                           <Text style={styles.unitName}>{unit.unitName}</Text>
                         </TouchableOpacity>

@@ -6,12 +6,19 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
+  Alert,
 } from 'react-native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import { useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '../store';
+import { updateUserProfile } from '../features/userInfoSlice';
+import { RootStackParamList } from '@/components/types';
 
 const ModifyAddress: React.FC = () => {
-  const { profile } = useAppSelector((state) => (state.userInfo))
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { profile } = useAppSelector((state) => state.userInfo);
+  const dispatch = useAppDispatch();
 
   const [address, setAddress] = useState({
     addressline1: profile.addressLine1 || '',
@@ -20,6 +27,8 @@ const ModifyAddress: React.FC = () => {
     state: profile.state || '',
     zipcode: profile.zipcode || '',
   });
+
+  const [isPickerVisible, setPickerVisible] = useState(false);
 
   const states = [
     'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
@@ -35,7 +44,20 @@ const ModifyAddress: React.FC = () => {
     setAddress((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
+      const updateAddressAction = await dispatch(
+        updateUserProfile({
+          _accessToken: '',
+          _memberId: '',
+          ...address,
+        })
+      );
+      navigation.navigate('Profile/PersonalInfo');
+    } catch (error: any) {
+      console.error('Error updating Address:', error);
+      Alert.alert('Error', 'Failed to Update Address. Please try again.');
+    }
     console.log('Address saved:', address);
   };
 
@@ -57,17 +79,42 @@ const ModifyAddress: React.FC = () => {
       ))}
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>State</Text>
-        <Picker
-          selectedValue={address.state}
-          onValueChange={(value: string) => handleInputChange('state', value)}
-          style={styles.picker}
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setPickerVisible(true)}
         >
-          <Picker.Item label="Select State" value="" />
-          {states.map((state) => (
-            <Picker.Item key={state} label={state} value={state} />
-          ))}
-        </Picker>
+          <Text style={styles.pickerText}>
+            {address.state || 'Select State'}
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Modal for Picker */}
+      <Modal visible={isPickerVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={address.state}
+              onValueChange={(value) => {
+                handleInputChange('state', value);
+                setPickerVisible(false);
+              }}
+            >
+              <Picker.Item label="Select State" value="" />
+              {states.map((state) => (
+                <Picker.Item key={state} label={state} value={state} />
+              ))}
+            </Picker>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setPickerVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>Save Address</Text>
       </TouchableOpacity>
@@ -99,11 +146,31 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     paddingHorizontal: 8,
+    justifyContent: 'center',
     backgroundColor: 'white',
   },
-  picker: {
-    height: 50,
+  pickerText: {
+    fontSize: 16,
+    color: 'black',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  pickerContainer: {
     backgroundColor: 'white',
+    padding: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  closeButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: 'red',
   },
   button: {
     padding: 12,
