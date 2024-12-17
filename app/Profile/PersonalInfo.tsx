@@ -140,7 +140,6 @@ const PersonalInformation: React.FC = () => {
       if (Object.keys(payload).length > 2) {
         const resultAction = await dispatch(updateUserProfile(payload as Required<typeof payload>)).unwrap();
         Alert.alert('Success', 'Profile updated successfully');
-        console.log('Updated Profile:', resultAction);
         navigation.navigate('Zippora/ZipporaHome');
       } else {
         Alert.alert('No Changes', 'No changes were made to your profile.');

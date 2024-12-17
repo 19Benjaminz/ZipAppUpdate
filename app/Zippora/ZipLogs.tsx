@@ -23,7 +23,6 @@ const ZipLogs: React.FC = () => {
   const loadLogs = async () => {
     try {
       await dispatch(fetchZipporaLogs());
-      console.log("Zippora Logs: ", zipporaLog)
     } catch (error) {
       console.error('Error fetching logs:', error);
       Alert.alert('Error', 'Failed to fetch logs. Please try again.');

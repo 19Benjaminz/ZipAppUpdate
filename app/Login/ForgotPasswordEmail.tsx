@@ -26,7 +26,6 @@ const ForgotPasswordEmail: React.FC = () => {
     try {
       // Simulate API request to send verification code
       const data = await dispatch(sendForgotPasswordVcode(email))
-      console.log('in ForgotPasswordEmail: ', data);
       const memberId = data.payload.memberId;
       console.log('Sending verification code to email:', email);
       Alert.alert('Success', 'Verification code sent to your email.');

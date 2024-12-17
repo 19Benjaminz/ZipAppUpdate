@@ -41,9 +41,6 @@ export const register = createAsyncThunk(
         try {
             const response = await authApi.register(credentials);
             const { ret, data, msg } = response.data;
-            console.log(response)
-            console.log(data)
-            console.log(msg)
 
             if (ret === 0) {
                 // Successful register
@@ -83,7 +80,6 @@ export const sendForgotPasswordVcode = createAsyncThunk(
       try {
         const response = await authApi.sendForgotPasswordVcode(email);
         const { ret, data, msg } = response.data;
-        console.log('send forgot password vcode', response.data);
   
         if (ret === 0) {
           return data; // Return the data if successful
@@ -100,12 +96,8 @@ export const resetPassword = createAsyncThunk (
     'auth/modifyPassword',
     async (credentials: { memberId: string, psd1: string; psd2: string; vcode: string }, thunkAPI) => {
         try {
-            console.log(credentials);
             const response = await authApi.resetPassword(credentials);
             const { ret, data, msg } = response.data;
-            console.log(ret)
-            console.log(data)
-            console.log(msg)
 
             if (ret === 0) {
                 // Successful register
@@ -129,9 +121,6 @@ export const resetPassword = createAsyncThunk (
             const { accessToken, memberId } = state.userInfo;
             const response = await authApi.logout(accessToken, memberId);
             const { ret, data, msg } = response.data;
-            console.log(ret)
-            console.log(data)
-            console.log(msg)
 
             if (ret === 0) {
                 // Successful register
@@ -159,12 +148,9 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(login.fulfilled, (state, action) => {
-                console.log("Login Success")
-                console.log(action.payload)
                 state.loading = false;
                 state.user = action.payload;
                 SecureStore.setItemAsync("accessToken", action.payload.accessToken);
-                console.log('accessToken Auth: ', action.payload.accessToken);
                 SecureStore.setItemAsync("memberId", action.payload.memberId);
             })
             .addCase(login.rejected, (state, action) => {
@@ -179,7 +165,6 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 console.log("Register Success")
-                console.log(action.payload)
                 state.loading = false;
                 state.user = action.payload;
                 SecureStore.setItemAsync("accessToken", action.payload.accessToken);
@@ -191,7 +176,5 @@ const authSlice = createSlice({
             });
     },
 });
-
-console.log('Exported authSlice.reducer:', authSlice.reducer);
 export default authSlice.reducer;
 

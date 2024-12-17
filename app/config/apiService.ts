@@ -9,10 +9,7 @@ export const authApi = {
         const payload = new FormData();
         if (credentials.email) payload.append('email', credentials.email);
         if (credentials.phoneNum) payload.append('phoneNum', credentials.phoneNum);
-        payload.append('psd', credentials.password); // Assuming password is already hashed (MD5)
-        //payload.append('deviceId', 'someDeviceId'); // Replace 'someDeviceId' with the correct device token
-        console.log("****************")
-        console.log(payload);
+        payload.append('psd', credentials.password); 
         // Make the API call with FormData
         return apiClient.post(API_ENDPOINTS.LOGIN.LOGIN, payload, {
             headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
@@ -85,7 +82,6 @@ export const profileApi = {
             params.append('_memberId', credentials.memberId);
     
             requestURL += `?${params.toString()}`;
-            console.log(requestURL)
         }
     
         try {
@@ -163,7 +159,6 @@ export const profileApi = {
             payload.append('oldPsd', credentials.oldPsd);
             payload.append('psd1', credentials.psd1);
             payload.append('psd2', credentials.psd2);
-            console.log(payload);
         }
     
         try {
@@ -270,7 +265,6 @@ export const zipporaApi = {
         const requestURL = `${API_ENDPOINTS.STORE.GET_LIST}?${params.toString()}`;
         try {
           const response = await apiClient.get(requestURL);
-          console.log(response);
     
           if (response.data.ret === 0) {
             return response.data; // Successful response
@@ -291,7 +285,6 @@ export const zipporaApi = {
         const requestURL = `${API_ENDPOINTS.QRCODE.SCAN}?${params.toString()}`;
         try {
             const response = await apiClient.get(requestURL);
-            console.log(response);
       
             if (response.data.ret === 0) {
               return response.data; // Successful response

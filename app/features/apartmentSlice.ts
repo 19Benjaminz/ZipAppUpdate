@@ -36,9 +36,6 @@ export const fetchApartmentList = createAsyncThunk(
         try {
             const response = await apartmentApi.getApartmentList({accessToken, memberId, zipcode})
             const { ret, data, msg } = response;
-            console.log('------------------');
-            console.log('Apartment List: ');
-            console.log(data)
 
             if (ret === 0) {
                 return { apartmentList: data.apartmentList };
@@ -61,11 +58,6 @@ export const fetchUnitList = createAsyncThunk(
       try {
         const response = await apartmentApi.getUnitList({ accessToken, memberId, apartmentId });
         const { ret, data, msg } = response.data;
-  
-        console.log('------------------');
-        console.log("ret: ", ret);
-        console.log('msg: ', msg);
-        console.log('Unit List Response:', data);
   
         if (ret === 0 && data.unitList) {
           return { unitList: data.unitList }; // Ensure unitList is defined
@@ -91,13 +83,7 @@ export const fetchUnitList = createAsyncThunk(
 
       try {
         const response = await apartmentApi.bindApartment({accessToken, memberId, apartmentId, unitId})
-        console.log(response);
         const { ret, data, msg } = response;
-  
-        console.log('++++++++++++++++++++++++++++++++++++');
-        console.log("ret: ", ret);
-        console.log('msg: ', msg);
-        console.log('sub APT Response:', data);
       } catch (error: any) {
         console.error('Error sub to APT:', error.message);
       }
@@ -113,13 +99,7 @@ export const fetchUnitList = createAsyncThunk(
 
       try {
         const response = await apartmentApi.unsubscribeApartment({accessToken, memberId, apartmentId})
-        console.log(response);
         const { ret, data, msg } = response;
-  
-        console.log('+_+_++_+++_+_++_+_+_+_+_+++_');
-        console.log("ret: ", ret);
-        console.log('msg: ', msg);
-        console.log('unsub APT Response:', data);
       } catch (error: any) {
         console.error('Error sub to APT:', error.message);
       }

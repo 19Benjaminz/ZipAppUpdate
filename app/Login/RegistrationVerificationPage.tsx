@@ -43,13 +43,10 @@ const RegistrationVerificationPage = () => {
         if (register.fulfilled.match(resultAction)) {
           const { ret, msg, data } = resultAction.payload;
   
-          console.log("Response Message:", resultAction); // Log the message
-  
           // Handle specific cases based on 'ret'
           switch (ret) {
             case 0: // Registration success
                 console.log("Registration successful!");
-                console.log("**&*&*&*&*&*&*&*&&*&*&*&*&*&*&*&*&*&")
 
                 dispatch(setAccessToken(data.accessToken));
                 dispatch(setMemberId(data.memberId));
@@ -92,16 +89,6 @@ const RegistrationVerificationPage = () => {
       Alert.alert('Error', 'Please enter the verification code');
       return;
     }
-
-    console.log('Registering with data: ', {
-      phoneNum,
-      email,
-      firstName,
-      lastName,
-      psd1,
-      psd2,
-      verificationCode,
-    });
 
     registerAction()
   };

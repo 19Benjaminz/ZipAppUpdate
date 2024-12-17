@@ -40,7 +40,6 @@ export default function BarcodeScan() {
     setScanned(true);
     try {
       const response = await dispatch(scanQRCode(data));
-      console.log(response);
     } catch (error) {
       console.error('Error Scaning qr Code', error);
       Alert.alert('Error', 'Failed to Scan QR code');

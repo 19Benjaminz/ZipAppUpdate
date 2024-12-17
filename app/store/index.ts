@@ -6,8 +6,6 @@ import zipporaReducer from "../features/zipporaInfoSlice"
 import apartmentReducer from "../features/apartmentSlice"
 import "./testImport"
 
-console.log('Imported authReducer:', authReducer);
-
 export const store = configureStore({
     reducer: {
         auth: authReducer,

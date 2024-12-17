@@ -58,7 +58,6 @@ const ModifyAddress: React.FC = () => {
       console.error('Error updating Address:', error);
       Alert.alert('Error', 'Failed to Update Address. Please try again.');
     }
-    console.log('Address saved:', address);
   };
 
   return (

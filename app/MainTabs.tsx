@@ -20,8 +20,6 @@ export default function MainTabs() {
             const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
             const memberId = (await SecureStore.getItemAsync('memberId')) || '';
             console.log("Initializing credentials...");
-            console.log("AccessToken: ", accessToken);
-            console.log("MemberId: ", memberId);
       
             dispatch(setAccessToken(accessToken));
             dispatch(setMemberId(memberId));

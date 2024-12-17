@@ -42,9 +42,7 @@ const ZipporaInfo = () => {
           text: "Unsubscribe",
           style: "destructive",
           onPress: async () => {
-            console.log("Unsubscribing from Apartment ID: ", apartmentId);
             await unsubApartment(apartmentId);
-            console.log(`Unsubscribed from apartment with ID: ${apartmentId}`);
             navigation.navigate("Zippora/ZipporaHome");
           },
         },

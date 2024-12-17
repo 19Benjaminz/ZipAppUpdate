@@ -57,7 +57,6 @@ const ForgotPasswordForm: React.FC = () => {
       // Simulate API request to reset password
       const response = await dispatch(resetPassword({memberId: memberId, psd1: md5Hash(newPassword), psd2: md5Hash(confirmPassword), vcode: verificationCode}));
       console.log('Resetting password for email:', email);
-      console.log(response);
       Alert.alert('Success', 'Password has been reset successfully.');
       navigation.reset({
         index: 0,

@@ -76,14 +76,10 @@ export const fetchUserApartments = createAsyncThunk(
   async (_, thunkAPI) => {
     const state: any = thunkAPI.getState();
     const { accessToken, memberId } = state.userInfo;
-    console.log("!!!!!!!!!!!!!Fetch User APartment!!!!!!!!!")
-    console.log("accesstoken: ", accessToken);
-    console.log("memberId: ", memberId);
+
     try {
       const response = await zipporaApi.getZipporaList({ accessToken, memberId });
       const { ret, data, msg } = response;
-      console.log("*****Apartment data*****")
-      console.log(data)
 
       if (ret === 0) {
         return {
@@ -107,9 +103,6 @@ export const fetchZipporaLogs = createAsyncThunk(
     try {
       const response = await zipporaApi.getZipporaLogs({ accessToken, memberId });
       const { ret, data, msg } = response;
-      console.log("*****LOGS*****")
-      console.log(ret)
-      console.log(data)
 
       if (ret === 0) {
         return {
@@ -132,11 +125,8 @@ export const scanQRCode = createAsyncThunk(
     try {
       const response = await zipporaApi.qrCodeScan({ accessToken, memberId, text });
       const { ret, data, msg } = response;
-      console.log("*****SCANNING QR CODE*****")
-      console.log(ret)
 
       if (ret === 0) {
-        console.log("SCAN SUCCESS")
         return ret;
       } else {
         return thunkAPI.rejectWithValue(msg || 'Failed to fetch apartments');
@@ -163,8 +153,6 @@ const zipporaInfoSlice = createSlice({
           state.loading = false;
           state.apartmentList = action.payload.apartmentList || [];
           state.selfStoreList = action.payload.selfStoreList || []; // Handle empty or missing selfStoreList
-          console.log('--------------------------')
-          console.log(state.selfStoreList)
         }
       )      
       .addCase(fetchUserApartments.rejected, (state, action) => {
@@ -183,7 +171,6 @@ const zipporaInfoSlice = createSlice({
           state.loading = false;
           state.zipporaLog = action.payload.zipporaLogs || []; // Handle empty or missing selfStoreList
           console.log('GETCHING LOGS SUCCESS')
-          console.log(state.selfStoreList)
         }
       )      
       .addCase(fetchZipporaLogs.rejected, (state, action) => {

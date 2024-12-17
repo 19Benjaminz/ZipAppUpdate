@@ -153,8 +153,6 @@ const SubToAPT = () => {
         // Zipcode already exist
         aptAddress.zipcode = zipcode; // Zipcode (optional)
   
-        console.log('Parsed Address:', aptAddress);
-  
         // Dispatch the updateUserProfile action with the parsed address
         const updateAddressAction = await dispatch(
           updateUserProfile({

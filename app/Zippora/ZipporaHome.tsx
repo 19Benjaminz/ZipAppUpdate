@@ -27,9 +27,6 @@ const ZipporaHome: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = async () => {
-    console.log("<<<<<<<<<<<<<<<Zippora Home>>>>>>>>>>>>>>>>>>>>>")
-    console.log("accesstoken: ", accessToken);
-    console.log("memberId: ", memberId);
     const credentials = {
       accessToken: accessToken || '',
       memberId: memberId || '',
@@ -39,7 +36,6 @@ const ZipporaHome: React.FC = () => {
       try {
         const resultAction = await dispatch(getUser(credentials));
         if (getUser.fulfilled.match(resultAction)) {
-          console.log('User data fetched successfully:', resultAction.payload);
         } else {
           console.error('Failed to fetch user data:', resultAction.payload || resultAction.error);
           Alert.alert('Error', 'Failed to fetch user data. Please try again.');

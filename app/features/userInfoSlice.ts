@@ -147,10 +147,8 @@ export const updateUserProfile = createAsyncThunk(
         // Ensure required fields are added
         profileData._accessToken = accessToken;
         profileData._memberId = memberId;
-        console.log("Profile Data: ", profileData);
   
         const response = await profileApi.updateProfile(profileData);
-        console.log(response)
         const { ret, msg } = response;
   
         if (ret === 0) {
@@ -177,9 +175,6 @@ export const updateUserProfile = createAsyncThunk(
 
         const response = await profileApi.changePassword({ accessToken, memberId, ...credentials });
         const { ret, data, msg } = response.data;
-        console.log("Change Password ret:", ret)
-        console.log("Change Password Data:", data)
-        console.log("Change Password msg:", msg)
   
         if (ret === 0) {
           return data;

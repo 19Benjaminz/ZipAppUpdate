@@ -32,7 +32,6 @@ const Register = () => {
   const sendVcodeAction = async () => {
     try {
       const result = await dispatch(sendRegisterVcode(email)).unwrap();
-      console.log("Verification code sent successfully!", result);
     } catch (error) {
       console.error("Failed to send verification code:", error);
     }
@@ -41,7 +40,6 @@ const Register = () => {
   const handleSignUp = async () => {
     console.log("Registering with email...");
     if (email) {
-      console.log(email);
       await sendVcodeAction();
     }
 
