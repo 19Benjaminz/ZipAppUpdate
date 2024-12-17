@@ -53,7 +53,7 @@ const Login = () => {
           typeof resultAction.payload === 'string'
             ? resultAction.payload
             : 'Please try again.';
-        Alert.alert('Login Failed', errorMessage);
+        Alert.alert('Login Failed ------ 1', errorMessage);
       }
     } catch (err) {
       console.error('Unexpected error:', err);

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "firstExpoApp",
-    "slug": "firstExpoApp",
-    "version": "1.0.0",
+    "name": "ZipAppTwo",
+    "slug": "ZipAppTwo",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -13,13 +13,21 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.unibox.express",
+      "buildNumber": "2.0.1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.zipcodexpress1",
+      "versionCode": 2,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -39,6 +47,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d5c4de98-003a-4393-9380-db9d958ed8e2"
+      }
     }
   }
 }

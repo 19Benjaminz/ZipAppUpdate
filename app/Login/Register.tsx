@@ -25,13 +25,17 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const sendVcodeAction = async () => {
     try {
+      setLoading(true);
       const result = await dispatch(sendRegisterVcode(email)).unwrap();
+      console.log(result);
+      setLoading(false);
     } catch (error) {
       console.error("Failed to send verification code:", error);
     }
@@ -159,14 +163,17 @@ const Register = () => {
         <TouchableOpacity
           style={{
             height: 50,
-            backgroundColor: signInButtonColor(),
+            backgroundColor: loading
+              ? 'rgba(42,187,103,0.3)'
+              : signInButtonColor(),
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 3,
             marginTop: 16,
           }}
-          activeOpacity={1}
+          activeOpacity={loading ? 1 : 0.7}
           onPress={handleSignUp}
+          disabled={loading}
         >
           <ZIPText style={{ fontSize: 18, color: signInTextColor() }}>Sign Up</ZIPText>
         </TouchableOpacity>

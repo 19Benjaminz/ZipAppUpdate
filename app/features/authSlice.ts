@@ -30,7 +30,7 @@ export const login = createAsyncThunk(
             }
         } catch (error: any) {
             // Handle other unexpected errors
-            return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+            return thunkAPI.rejectWithValue(error.response?.data?.message || error);
         }
     }
 );
@@ -41,6 +41,7 @@ export const register = createAsyncThunk(
         try {
             const response = await authApi.register(credentials);
             const { ret, data, msg } = response.data;
+            console.log(response.data)
 
             if (ret === 0) {
                 // Successful register

@@ -4,7 +4,6 @@ import authReducer from '../features/authSlice'; // Ensure this path is correct
 import userInfoReducer from "../features/userInfoSlice";
 import zipporaReducer from "../features/zipporaInfoSlice"
 import apartmentReducer from "../features/apartmentSlice"
-import "./testImport"
 
 export const store = configureStore({
     reducer: {
