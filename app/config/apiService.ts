@@ -1,7 +1,6 @@
-import { createElement } from 'react';
 import apiClient from './apiClient';
 import { API_ENDPOINTS } from './endpoints';
-import { changePassword } from '../features/userInfoSlice';
+import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
 
 // Example: Authentication API Calls
 export const authApi = {
@@ -65,6 +64,14 @@ export const authApi = {
             headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
         });
     },
+    logout: async (accessToken: string, memberId: string) => {
+        const payload = new FormData();
+        payload.append('_accessToken', accessToken);
+        payload.append('_memberId', memberId);
+        return apiClient.post(API_ENDPOINTS.LOGIN.LOGOUT, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
+        });
+    }
 };
 
 // Example: Profile API Calls
@@ -115,16 +122,16 @@ export const profileApi = {
         payload.append('_memberId', profileData._memberId);
 
         // Append optional fields if they are provided
-        if (profileData.nickName) payload.append('nickName', profileData.nickName);
-        if (profileData.firstName) payload.append('firstName', profileData.firstName);
-        if (profileData.lastName) payload.append('lastName', profileData.lastName);
+        if (profileData.nickName) payload.append('nickName', capitalizeFirstLetter(profileData.nickName));
+        if (profileData.firstName) payload.append('firstName', capitalizeFirstLetter(profileData.firstName));
+        if (profileData.lastName) payload.append('lastName', capitalizeFirstLetter(profileData.lastName));
         if (profileData.householderMember) payload.append('householderMember', profileData.householderMember);
         if (profileData.state) payload.append('state', profileData.state);
-        if (profileData.city) payload.append('city', profileData.city);
+        if (profileData.city) payload.append('city', capitalizeFirstLetter(profileData.city));
         if (profileData.zipcode) payload.append('zipcode', profileData.zipcode);
         if (profileData.addressline1) payload.append('addressline1', profileData.addressline1);
         if (profileData.addressline2) payload.append('addressline2', profileData.addressline2);
-        if (profileData.phone) payload.append('phone', profileData.phone);
+        if (profileData.phone) payload.append('phone', formatPhoneNumber(profileData.phone));
         if (profileData.email) payload.append('email', profileData.email);
         if (profileData.birth) payload.append('birth', profileData.birth);
         if (profileData.sex) payload.append('sex', profileData.sex);

@@ -5,10 +5,10 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  Linking,
   Image,
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
@@ -22,12 +22,16 @@ const ZipporaHome: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
-  const { apartmentList, selfStoreList, loading, error } = useAppSelector((state) => state.zipporaInfo);
+  const { apartmentList} = useAppSelector((state) => state.zipporaInfo);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchUserData = async () => {
+    console.log("<<<<<<<<<<<<<<<Zippora Home>>>>>>>>>>>>>>>>>>>>>")
+    console.log("accesstoken: ", accessToken);
+    console.log("memberId: ", memberId);
     const credentials = {
-      accessToken: accessToken || '', // Replace with actual access token
+      accessToken: accessToken || '',
       memberId: memberId || '',
     };
 
@@ -39,7 +43,10 @@ const ZipporaHome: React.FC = () => {
         } else {
           console.error('Failed to fetch user data:', resultAction.payload || resultAction.error);
           Alert.alert('Error', 'Failed to fetch user data. Please try again.');
-          navigation.navigate('Login/Login');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login/Login' }],
+          });
         }
       } catch (error) {
         console.error('Unexpected error fetching user data:', error);
@@ -48,7 +55,10 @@ const ZipporaHome: React.FC = () => {
     } else {
       console.error('Missing credentials: Access Token or Member ID');
       Alert.alert('Error', 'User credentials are missing. Please log in again.');
-      navigation.navigate('Login/Login');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login/Login' }],
+      });
     }
   };
 
@@ -65,10 +75,20 @@ const ZipporaHome: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchUserData();
-      fetchZipporaData();
-    }, [dispatch])
-  );
+        if (accessToken && memberId) { // Wait until credentials are ready
+            fetchUserData();
+            fetchZipporaData();
+            setLoading(false);
+        }
+        else {
+          console.error('---Missing credentials: Access Token or Member ID');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login/Login' }],
+          });
+        }
+    }, [dispatch, accessToken, memberId])
+);
 
   const handleAPTInfo = () => {
     navigation.navigate('Zippora/ZipporaInfo')
@@ -77,6 +97,15 @@ const ZipporaHome: React.FC = () => {
   const handleSubscribeNavigation = () => {
     navigation.navigate('Zippora/SubToAPT');
   };
+
+  // Show loading spinner if still loading
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="green" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -159,6 +188,12 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: '#F5F5F5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   card: {
     flexDirection: 'row',

@@ -76,6 +76,9 @@ export const fetchUserApartments = createAsyncThunk(
   async (_, thunkAPI) => {
     const state: any = thunkAPI.getState();
     const { accessToken, memberId } = state.userInfo;
+    console.log("!!!!!!!!!!!!!Fetch User APartment!!!!!!!!!")
+    console.log("accesstoken: ", accessToken);
+    console.log("memberId: ", memberId);
     try {
       const response = await zipporaApi.getZipporaList({ accessToken, memberId });
       const { ret, data, msg } = response;

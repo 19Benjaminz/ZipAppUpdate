@@ -3,7 +3,7 @@ import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Provider } from 'react-redux';
+import { Provider} from 'react-redux';
 import { store } from './store';
 import Login from './Login/Login';
 import Register from './Login/Register';
@@ -44,11 +44,11 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack.Navigator>
+        <Stack.Navigator initialRouteName="Zippora/ZipporaHome">
           <Stack.Screen
             name="Login/Login"
             component={Login}
-            options={{ title: 'Login', headerShown: true }}
+            options={{ title: 'Login', headerShown: true, headerLeft: () => null }}
           />
           <Stack.Screen
             name="Login/Register"

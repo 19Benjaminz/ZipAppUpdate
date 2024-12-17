@@ -50,6 +50,7 @@ export const API_ENDPOINTS = {
       CHANGE_PASSWORD: 'login/changePsd',
       VERIFY_EMAIL: 'login/verifyEmail',
       SEND_VCODE: 'login/sendvcode',
+      LOGOUT: 'login/logout',
     },
     PHOTO: {
       UPLOAD: 'Photo/uploadPhoto',

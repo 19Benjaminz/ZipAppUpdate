@@ -13,6 +13,9 @@ import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch, useAppSelector } from '../store';
 import { getUser, updateUserProfile } from '../features/userInfoSlice';
+import { logout } from '../features/authSlice';
+import * as SecureStore from 'expo-secure-store';
+
 
 const PersonalInformation: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -148,6 +151,18 @@ const PersonalInformation: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await dispatch(logout());
+    console.log('logout success');
+    await SecureStore.deleteItemAsync('accessToken');
+    await SecureStore.deleteItemAsync('memberId');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login/Login' }],
+    });
+    return
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       {/* Personal Information Section */}
@@ -183,7 +198,7 @@ const PersonalInformation: React.FC = () => {
         <TouchableOpacity style={styles.actionButton} onPress={handleModifyPassword}>
           <Text style={styles.actionButtonText}>Modify Password</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.logoutButton]}>
+        <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Log Out</Text>
         </TouchableOpacity>
       </View>

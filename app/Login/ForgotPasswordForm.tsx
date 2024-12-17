@@ -59,7 +59,10 @@ const ForgotPasswordForm: React.FC = () => {
       console.log('Resetting password for email:', email);
       console.log(response);
       Alert.alert('Success', 'Password has been reset successfully.');
-      navigation.navigate('Login/Login'); // Navigate to Login page after success
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login/Login' }],
+      });
     } catch (error) {
       console.error('Error resetting password:', error);
       Alert.alert('Error', 'Failed to reset password. Please try again.');

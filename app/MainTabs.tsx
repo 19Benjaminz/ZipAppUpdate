@@ -1,14 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ZipporaHome from './Zippora/ZipporaHome';
 import Profile from './Profile/Profile';
 import BarcodeScan from './Camera/BarcodeScan';
 import { Icon } from 'react-native-elements';
-import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Platform, ActivityIndicator } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import { useAppDispatch, useAppSelector } from './store';
+import { setAccessToken, setMemberId } from './features/userInfoSlice';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+    const dispatch = useAppDispatch();
+    const [loading, setLoading] = useState(true); // Add loading state
+
+    useEffect(() => {
+        const initializeAuth = async () => {
+            const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
+            const memberId = (await SecureStore.getItemAsync('memberId')) || '';
+            console.log("Initializing credentials...");
+            console.log("AccessToken: ", accessToken);
+            console.log("MemberId: ", memberId);
+      
+            dispatch(setAccessToken(accessToken));
+            dispatch(setMemberId(memberId));
+            setLoading(false); // Mark loading as complete
+        };
+
+        initializeAuth();
+    }, [dispatch]);
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="green" />
+            </View>
+        );
+    }
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -20,7 +50,7 @@ export default function MainTabs() {
                     } else if (route.name === 'Profile') {
                         iconName = 'person';
                     } else {
-                        iconName = 'help-outline'; // fallback icon name
+                        iconName = 'help-outline';
                     }
 
                     return (
@@ -36,30 +66,20 @@ export default function MainTabs() {
                 tabBarInactiveTintColor: 'gray',
                 tabBarShowLabel: false,
                 headerShown: false,
-                tabBarStyle: {
-                    height: Platform.OS === 'ios' ? 80 : 60, // Adds space for the button to overlay
-                    paddingBottom: 10,
-                    justifyContent: 'center',
-                    alignContent: 'center'
-                },
             })}
         >
             <Tab.Screen name="Home" component={ZipporaHome} />
             
             <Tab.Screen
                 name="BarcodeScan"
-                children={() => <BarcodeScan key={Math.random()} />} // Add a unique key to force remount
+                children={() => <BarcodeScan key={Math.random()} />}
                 options={{
                     tabBarButton: (props) => (
-                    <TouchableOpacity
-                        {...props}
-                        style={styles.cameraButtonContainer}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.cameraButton}>
-                        <Icon name="camera" type="material" color="white" size={28} />
-                        </View>
-                    </TouchableOpacity>
+                        <TouchableOpacity {...props} style={styles.cameraButtonContainer} activeOpacity={0.7}>
+                            <View style={styles.cameraButton}>
+                                <Icon name="camera" type="material" color="white" size={28} />
+                            </View>
+                        </TouchableOpacity>
                     ),
                 }}
             />
@@ -70,11 +90,17 @@ export default function MainTabs() {
 }
 
 const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
+    },
     cameraButtonContainer: {
-        bottom: '5%', // Fine-tune positioning
+        bottom: '5%',
         height: 80,
         width: 80,
-        borderRadius: 40, // Ensures perfect circle for the outer container
+        borderRadius: 40,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1,
@@ -87,14 +113,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'green',
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000', // Optional shadow for iOS
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 3,
-        elevation: 5, // Shadow for Android
-    },
-    tabBarStyle: {
-        height: Platform.OS === 'ios' ? 80 : 60,
-        paddingBottom: 10,
+        elevation: 5,
     },
 });

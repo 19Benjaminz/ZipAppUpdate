@@ -14,7 +14,7 @@ import { changePassword } from '../features/userInfoSlice';
 import { md5Hash } from '../Actions/ToMD5';
 import { RootStackParamList } from '@/components/types';
 
-const ModifyPassword: React.FC = () => {
+const ModifyPassword = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
 

@@ -14,6 +14,7 @@ import { NavigationProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch } from '../store';
 import { sendRegisterVcode } from '../features/authSlice';
+import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -43,6 +44,15 @@ const Register = () => {
       console.log(email);
       await sendVcodeAction();
     }
+
+    const standardizedFirstName = capitalizeFirstLetter(firstName);
+    const standardizedLastName = capitalizeFirstLetter(lastName);
+    const formattedPhone = formatPhoneNumber(phoneNum);
+
+    setFirstName(standardizedFirstName);
+    setLastName(standardizedLastName);
+    setPhoneNum(formattedPhone);
+    
     navigation.navigate("Login/RegistrationVerificationPage", {
       email,
       phoneNum,

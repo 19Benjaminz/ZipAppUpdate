@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../config/apiService'; // Adjust the import path based on your project structure
+import * as SecureStore from 'expo-secure-store';
 
 export interface AuthState {
     loading: boolean;
@@ -96,7 +97,7 @@ export const sendForgotPasswordVcode = createAsyncThunk(
 );
 
 export const resetPassword = createAsyncThunk (
-    'userInfo/modifyPassword',
+    'auth/modifyPassword',
     async (credentials: { memberId: string, psd1: string; psd2: string; vcode: string }, thunkAPI) => {
         try {
             console.log(credentials);
@@ -109,6 +110,32 @@ export const resetPassword = createAsyncThunk (
             if (ret === 0) {
                 // Successful register
                 return response.data;
+            } else {
+                // Reject with the error message from the API
+                return thunkAPI.rejectWithValue(msg || 'Reset Password failed');
+            }
+        } catch (error: any) {
+            // Handle other unexpected errors
+            return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+        }
+    }
+  )
+
+  export const logout = createAsyncThunk (
+    'auth/logout',
+    async (_, thunkAPI) => {
+        try {
+            const state: any = thunkAPI.getState();
+            const { accessToken, memberId } = state.userInfo;
+            const response = await authApi.logout(accessToken, memberId);
+            const { ret, data, msg } = response.data;
+            console.log(ret)
+            console.log(data)
+            console.log(msg)
+
+            if (ret === 0) {
+                // Successful register
+                return response;
             } else {
                 // Reject with the error message from the API
                 return thunkAPI.rejectWithValue(msg || 'Reset Password failed');
@@ -136,6 +163,9 @@ const authSlice = createSlice({
                 console.log(action.payload)
                 state.loading = false;
                 state.user = action.payload;
+                SecureStore.setItemAsync("accessToken", action.payload.accessToken);
+                console.log('accessToken Auth: ', action.payload.accessToken);
+                SecureStore.setItemAsync("memberId", action.payload.memberId);
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
@@ -152,6 +182,8 @@ const authSlice = createSlice({
                 console.log(action.payload)
                 state.loading = false;
                 state.user = action.payload;
+                SecureStore.setItemAsync("accessToken", action.payload.accessToken);
+                SecureStore.setItemAsync("memberId", action.payload.memberId);
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
