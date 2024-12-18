@@ -78,10 +78,12 @@ const ZipporaHome: React.FC = () => {
         }
         else {
           console.error('---Missing credentials: Access Token or Member ID');
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Login/Login' }],
-          });
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login/Login' }],
+            });
+          }, 0);
         }
     }, [dispatch, accessToken, memberId])
 );

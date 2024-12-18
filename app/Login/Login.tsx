@@ -55,9 +55,11 @@ const Login = () => {
             : 'Please try again.';
         Alert.alert('Login Failed ------ 1', errorMessage);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Unexpected error:', err);
-      Alert.alert('Login Failed', 'An unexpected error occurred.');
+      const errorMessage =
+      err.response?.data?.message || err.message || 'Unexpected error occurred';
+      Alert.alert('Login Failed', errorMessage);
     }
   };
 
@@ -73,18 +75,29 @@ const Login = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.formContainer}>
-        <TextInput
-          placeholder="Email"
-          onChangeText={(text) => setFormData({ ...formData, email: text })}
-          style={styles.input}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+      <TextInput
+        placeholder="Email"
+        value={formData.email}
+        onChangeText={(text) => {
+          setTimeout(() => {
+            setFormData((prev) => ({ ...prev, email: text }));
+          }, 0);
+        }}
+        style={styles.input}
+        keyboardType="email-address"
+        textContentType="username"
+        autoComplete="username"
+        autoCapitalize="none"
+      />
+
         <TextInput
           placeholder="Password"
           secureTextEntry
           onChangeText={(text) => setFormData({ ...formData, password: text })}
           style={styles.input}
+          textContentType="password"
+          autoComplete="password"
+          value={formData.password}
         />
 
         {error && <Text style={styles.errorText}>{error}</Text>}

@@ -30,7 +30,7 @@ export const login = createAsyncThunk(
             }
         } catch (error: any) {
             // Handle other unexpected errors
-            return thunkAPI.rejectWithValue(error.response?.data?.message || error);
+            return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
         }
     }
 );
@@ -121,11 +121,11 @@ export const resetPassword = createAsyncThunk (
             const state: any = thunkAPI.getState();
             const { accessToken, memberId } = state.userInfo;
             const response = await authApi.logout(accessToken, memberId);
-            const { ret, data, msg } = response.data;
+            const { ret, msg } = response.data;
 
             if (ret === 0) {
                 // Successful register
-                return response;
+                return response.data;
             } else {
                 // Reject with the error message from the API
                 return thunkAPI.rejectWithValue(msg || 'Reset Password failed');
@@ -172,6 +172,22 @@ const authSlice = createSlice({
                 SecureStore.setItemAsync("memberId", action.payload.memberId);
             })
             .addCase(register.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
+
+        builder
+            .addCase(logout.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(logout.fulfilled, (state, action) => {
+                console.log("Logout Success Success")
+                state.loading = false;
+                SecureStore.deleteItemAsync("accessToken");
+                SecureStore.deleteItemAsync("memberId");
+            })
+            .addCase(logout.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
