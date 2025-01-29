@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "344956816308",
+    "project_id": "zipcodeexpress-de9e1",
+    "storage_bucket": "zipcodeexpress-de9e1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:344956816308:android:d1e9db59e897a1f17ac0e1",
+        "android_client_info": {
+          "package_name": "com.community.forum"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "344956816308-asv8shc7nd20ao6lq0a4mi682tohu9ll.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSRmLB44-QOew8F8yd_hkKojZceOnLWFE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "344956816308-asv8shc7nd20ao6lq0a4mi682tohu9ll.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "344956816308-cbfse084428e069p9qqo4j8t2bs56evm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.unibox.express"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:344956816308:android:ff7a5291e42e251c7ac0e1",
+        "android_client_info": {
+          "package_name": "com.zipcodexpress1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "344956816308-asv8shc7nd20ao6lq0a4mi682tohu9ll.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSRmLB44-QOew8F8yd_hkKojZceOnLWFE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "344956816308-asv8shc7nd20ao6lq0a4mi682tohu9ll.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "344956816308-cbfse084428e069p9qqo4j8t2bs56evm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.unibox.express"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

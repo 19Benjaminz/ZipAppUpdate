@@ -147,6 +147,7 @@ export const updateUserProfile = createAsyncThunk(
         // Ensure required fields are added
         profileData._accessToken = accessToken;
         profileData._memberId = memberId;
+        console.log("Profile Data: ", profileData);
   
         const response = await profileApi.updateProfile(profileData);
         const { ret, msg } = response;

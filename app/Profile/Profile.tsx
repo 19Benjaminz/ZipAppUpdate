@@ -37,6 +37,7 @@ const Profile: React.FC = () => {
     const isFocused = useIsFocused(); // React Navigation hook to detect screen focus
     const [loading, setLoading] = useState(false);
     const { profile, member, accessToken, memberId } = useAppSelector((state) => state.userInfo);
+    console.log(profile);
 
     const handleRefresh = async () => {
         try {
@@ -71,6 +72,11 @@ const Profile: React.FC = () => {
                 icon: require('../../assets/images/zipporalog.png'), // Replace with the correct icon path
                 screen: 'Zippora/ZipLogs' as keyof RootStackParamList,
             },
+            {
+                title: 'Subscribe to New Aparment',
+                icon: require('../../assets/images/apartment.png'),
+                screen: 'Zippora/SubToAPT' as keyof RootStackParamList,
+            }
         ];
     
         return items.map((item, index) => (

@@ -16,13 +16,17 @@ const initialState: AuthState = {
 
 export const login = createAsyncThunk(
     'auth/login',
-    async (credentials: { email?: string; phoneNum?: string; password: string }, thunkAPI) => {
+    async (credentials: { email?: string; phoneNum?: string; userid?: string; password: string; deviceId?: string }, thunkAPI) => {
         try {
             const response = await authApi.login(credentials);
             const { ret, data, msg } = response.data;
 
             if (ret === 0) {
                 // Successful login
+                const value = await SecureStore.getItemAsync("password");
+                if (!value) {
+                    SecureStore.setItemAsync("password", credentials.password);
+                }
                 return data;
             } else {
                 // Reject with the error message from the API
@@ -45,10 +49,12 @@ export const register = createAsyncThunk(
 
             if (ret === 0) {
                 // Successful register
+                SecureStore.setItemAsync("password", credentials.psd1);
                 return response.data;
             } else {
                 // Reject with the error message from the API
-                return thunkAPI.rejectWithValue(msg || 'Register failed');
+                console.log("ret != 0")
+                return response.data.ret;
             }
         } catch (error: any) {
             // Handle other unexpected errors
@@ -125,6 +131,8 @@ export const resetPassword = createAsyncThunk (
 
             if (ret === 0) {
                 // Successful register
+                const storedAccessToken = await SecureStore.getItemAsync('accessToken');
+                console.log('Store access token after logout:', storedAccessToken);
                 return response.data;
             } else {
                 // Reject with the error message from the API
@@ -184,8 +192,8 @@ const authSlice = createSlice({
             .addCase(logout.fulfilled, (state, action) => {
                 console.log("Logout Success Success")
                 state.loading = false;
-                SecureStore.deleteItemAsync("accessToken");
-                SecureStore.deleteItemAsync("memberId");
+                //SecureStore.deleteItemAsync("accessToken");
+                //SecureStore.deleteItemAsync("memberId");
             })
             .addCase(logout.rejected, (state, action) => {
                 state.loading = false;

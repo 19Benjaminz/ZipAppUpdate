@@ -14,11 +14,14 @@ const Tab = createBottomTabNavigator();
 export default function MainTabs() {
     const dispatch = useAppDispatch();
     const [loading, setLoading] = useState(true); // Add loading state
+    const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
 
     useEffect(() => {
         const initializeAuth = async () => {
             const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
             const memberId = (await SecureStore.getItemAsync('memberId')) || '';
+            console.log(accessToken)
+            console.log(memberId)
             console.log("Initializing credentials...");
       
             dispatch(setAccessToken(accessToken));
@@ -26,7 +29,12 @@ export default function MainTabs() {
             setLoading(false); // Mark loading as complete
         };
 
-        initializeAuth();
+        if (accessToken == '' && memberId == '') {
+            initializeAuth();
+        }
+        else {
+            setLoading(false);
+        }
     }, [dispatch]);
 
     if (loading) {

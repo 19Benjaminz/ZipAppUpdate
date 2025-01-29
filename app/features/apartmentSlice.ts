@@ -99,9 +99,10 @@ export const fetchUnitList = createAsyncThunk(
 
       try {
         const response = await apartmentApi.unsubscribeApartment({accessToken, memberId, apartmentId})
+        console.log(response)
         const { ret, data, msg } = response;
       } catch (error: any) {
-        console.error('Error sub to APT:', error.message);
+        console.error('Error unsub to APT:', error.message);
       }
     }
   )

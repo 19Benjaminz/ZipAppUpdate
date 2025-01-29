@@ -5,14 +5,16 @@ import ZIPText from './ZIPText';
 import ZIPTextInput from './ZIPTextInput';
 
 const Color = {
-    themeColor: '#2ABB67', // Replace with your preferred theme color
-  };
+  themeColor: '#2ABB67', // Replace with your preferred theme color
+  errorColor: 'red', // Color for the error state
+};
 
 interface CommonTextInputProps extends TextInputProps {
   style?: StyleProp<ViewStyle>;
   leftTitle: string;
   rightTitle?: string;
   onRightClick?: () => void;
+  isError?: boolean; // New prop to indicate error state
 }
 
 const CommonTextInput: React.FC<CommonTextInputProps> = ({
@@ -20,6 +22,7 @@ const CommonTextInput: React.FC<CommonTextInputProps> = ({
   leftTitle,
   rightTitle = '',
   onRightClick,
+  isError = false, // Default to no error
   ...textInputProps
 }) => {
   const [focus, setFocus] = useState(false);
@@ -30,7 +33,13 @@ const CommonTextInput: React.FC<CommonTextInputProps> = ({
       style={[
         styles.container,
         style,
-        { borderBottomColor: focus ? Color.themeColor : 'lightgray' },
+        {
+          borderBottomColor: isError
+            ? Color.errorColor // Error state
+            : focus
+            ? Color.themeColor // Focus state
+            : 'lightgray', // Default state
+        },
       ]}
     >
       <View style={styles.leftTitleContainer}>

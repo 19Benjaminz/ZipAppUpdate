@@ -26,7 +26,9 @@ const ZipporaInfo = () => {
   }, [dispatch]);
 
   const unsubApartment = async (apartmentId: string) => {
-    await dispatch(unsubscribeApartment(apartmentId));
+    const response = await dispatch(unsubscribeApartment(apartmentId));
+    console.log("========================");
+    console.log("response:", response)
   };
 
   const handleUnsubscribe = (apartmentId: string) => {
@@ -68,7 +70,7 @@ const ZipporaInfo = () => {
           <MaterialIcons name="home" size={36} color="#2ABB67" style={styles.icon} />
           <View style={styles.apartmentInfo}>
             <Text style={styles.apartmentName}>{apartment.apartmentName}</Text>
-            <Text style={styles.apartmentAddress}>{apartment.unitName} - {apartment.zipporaList[0].address}</Text>
+            <Text style={styles.apartmentAddress}>{apartment.unitName} - {apartment.zipporaList?.[0]?.address || "No Address available"}</Text>
             <Text style={styles.approveStatus}>
                 {apartment.approveStatus === "0" && "Pending Management Approval"}
             </Text>

@@ -11,6 +11,8 @@ type VerificationPageRouteProp = RouteProp<RootStackParamList, 'Login/Registrati
 
 const RegistrationVerificationPage = () => {
   const [verificationCode, setVerificationCode] = useState(''); // State for verification code
+  const [inputError, setInputError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const route = useRoute<VerificationPageRouteProp>();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
@@ -40,8 +42,10 @@ const RegistrationVerificationPage = () => {
     ) {
       try {
         const resultAction = await dispatch(register(credentials));
+        console.log(resultAction);
         if (register.fulfilled.match(resultAction)) {
           const { ret, msg, data } = resultAction.payload;
+          console.log(ret);
   
           // Handle specific cases based on 'ret'
           switch (ret) {
@@ -51,22 +55,27 @@ const RegistrationVerificationPage = () => {
                 dispatch(setAccessToken(data.accessToken));
                 dispatch(setMemberId(data.memberId));
 
-                navigation.reset({
+                setTimeout(() => {
+                  navigation.reset({
                     index: 0,
                     routes: [{ name: 'Zippora/ZipporaHome' }],
-            });
+                  });
+                }, 0);
               break;
             case 3: // Email already registered
               console.error("Error: Email has been registered.");
               Alert.alert("Error", "Email has already been registered.");
+              navigation.goBack();
               break;
             case 7: // Wrong verification code
               console.error("Error: Wrong verification code.");
-              Alert.alert("Error", "The verification code is incorrect.");
+              setInputError(true);
+              setErrorMessage("Wrong verification code. Please try again.");
               break;
             case 8: // Phone already registered
               console.error("Error: Phone has been registered.");
               Alert.alert("Error", "This phone number is already registered.");
+              navigation.goBack();
               break;
             default:
               console.error("Unhandled case:", msg);
@@ -90,7 +99,9 @@ const RegistrationVerificationPage = () => {
       return;
     }
 
-    registerAction()
+    setInputError(false); // Reset input error state
+    setErrorMessage('');
+    registerAction();
   };
 
   return (
@@ -99,19 +110,21 @@ const RegistrationVerificationPage = () => {
       <Text style={styles.details}>
         Please enter the verification code sent to your email: {email}
       </Text>
-      {phoneNum && (
-        <Text style={styles.details}>Phone Number: {phoneNum}</Text>
-      )}
+      {phoneNum && <Text style={styles.details}>Phone Number: {phoneNum}</Text>}
 
       {/* Verification Code Input */}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          inputError ? { borderColor: 'red', backgroundColor: '#ffe6e6' } : {},
+        ]}
         placeholder="Enter Verification Code"
         placeholderTextColor="gray"
         keyboardType="numeric"
         value={verificationCode}
         onChangeText={setVerificationCode}
       />
+      {inputError && <Text style={styles.errorText}>{errorMessage}</Text>}
 
       <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerButtonText}>Submit</Text>
@@ -145,7 +158,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 8,
-    marginBottom: 16,
+    marginBottom: 8,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
   },
@@ -159,6 +172,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 8,
   },
 });
 

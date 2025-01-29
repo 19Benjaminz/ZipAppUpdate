@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
+  Image
 } from 'react-native';
 import { md5Hash } from '../Actions/ToMD5';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +17,7 @@ import { RootStackParamList } from '../../components/types';
 import { login } from '../features/authSlice';
 import { setAccessToken, setMemberId } from '../features/userInfoSlice';
 import { RootState, useAppDispatch, useAppSelector } from '../store';
+import * as SecureStore from 'expo-secure-store';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login/Login'>;
 
@@ -26,15 +28,20 @@ const Login = () => {
   const { loading = false, error = null } = useAppSelector((state: RootState) => state.auth || {});
 
   const handleLogin = async () => {
+    console.log("clicking loging")
     if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
+    const deviceId = await SecureStore.getItemAsync('zipcodexpress-device-token');
     const credentials = {
       email: formData.email,
       password: md5Hash(formData.password),
+      ...(deviceId && { deviceId }),
     };
+
+    console.log(credentials)
 
     try {
       const resultAction = await dispatch(login(credentials));
@@ -42,6 +49,7 @@ const Login = () => {
       if (login.fulfilled.match(resultAction)) {
         const { accessToken, memberId } = resultAction.payload;
         dispatch(setAccessToken(accessToken));
+        console.log(accessToken);
         dispatch(setMemberId(memberId));
 
         navigation.reset({
@@ -74,11 +82,24 @@ const Login = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      <Image
+        source={require('../../assets/images/zipLogo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+
+    
       <View style={styles.formContainer}>
       <TextInput
         placeholder="Email"
         value={formData.email}
-        onChangeText={(text) => {
+        onChangeText={(text) => { 
+          setFormData((prev) => ({ ...prev, email: text }));
+        }}
+        onEndEditing={(e) => {
+          // Finalize the value when editing ends
+          const text = e.nativeEvent.text;
           setTimeout(() => {
             setFormData((prev) => ({ ...prev, email: text }));
           }, 0);
@@ -134,6 +155,12 @@ const Login = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: 'white' },
+  logo: {
+    width: '50%', // Adjust width and height as needed
+    height: '15%',
+    alignSelf: 'center', // Center the logo horizontally
+    marginBottom: 5, // Add space between the logo and the form
+  },
   formContainer: { paddingTop: 20 },
   input: { borderBottomWidth: 1, marginBottom: 16, borderColor: 'gray', padding: 10 },
   forgotPasswordContainer: { alignItems: 'center', marginVertical: 16 },

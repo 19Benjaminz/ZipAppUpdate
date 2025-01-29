@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Alert,
@@ -12,30 +12,96 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 import ZIPText from '../../components/ZIPText';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch, useAppSelector } from '../store';
-import { getUser } from '../features/userInfoSlice';
+import { getUser, setAccessToken } from '../features/userInfoSlice';
 import { fetchUserApartments } from '../features/zipporaInfoSlice';
+import { login } from '../features/authSlice';
 
 const ZipporaHome: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
-  const { apartmentList} = useAppSelector((state) => state.zipporaInfo);
+  const { apartmentList } = useAppSelector((state) => state.zipporaInfo);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isReloggingIn, setIsReloggingIn] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+
+  const handleReLogin = async () => {
+    if (isReloggingIn) return; // Prevent multiple re-login attempts
+  
+    try {
+      setIsReloggingIn(true); // Set flag
+      const savedMemberId = await SecureStore.getItemAsync('memberId');
+      const savedPassword = await SecureStore.getItemAsync('password');
+  
+      if (!savedMemberId || !savedPassword) {
+        throw new Error('Saved credentials are missing. Please log in again.');
+      }
+  
+      const deviceId = await SecureStore.getItemAsync('zipcodexpress-device-token');
+      const credentials = {
+        userid: savedMemberId,
+        password: savedPassword,
+        ...(deviceId && { deviceId }),
+      };
+  
+      const loginResponse = await dispatch(login(credentials));
+      console.log(loginResponse);
+  
+      if (login.fulfilled.match(loginResponse)) {
+        const { accessToken } = loginResponse.payload;
+  
+        // Save the new access token in SecureStore
+        await SecureStore.setItemAsync('accessToken', accessToken);
+        dispatch(setAccessToken(accessToken));
+  
+        console.log('Re-login successful. Access token updated.');
+  
+        // Wait for the state to propagate before retrying
+        setTimeout(async () => {
+          await fetchUserData();
+        }, 100); // Add a small delay to allow state updates
+      } else {
+        throw new Error('Re-login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Re-login error:', error);
+      Alert.alert('Error', 'Unable to re-login. Please log in manually.');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login/Login' }],
+      });
+    } finally {
+      setIsReloggingIn(false); // Reset flag
+    }
+  };
+  
 
   const fetchUserData = async () => {
-    const credentials = {
-      accessToken: accessToken || '',
-      memberId: memberId || '',
-    };
-
-    if (accessToken && memberId) {
-      try {
+    if (isFetchingData) return; // Prevent multiple fetch calls
+    try {
+      setIsFetchingData(true); // Set flag
+  
+      // Retrieve the latest accessToken
+      const latestAccessToken = await SecureStore.getItemAsync('accessToken');
+      const credentials = {
+        accessToken: latestAccessToken || '',
+        memberId: memberId || '',
+      };
+  
+      if (latestAccessToken && memberId) {
         const resultAction = await dispatch(getUser(credentials));
+        console.log('ZipporaHome RET: ', resultAction);
+  
         if (getUser.fulfilled.match(resultAction)) {
+          console.log('User data fetched successfully');
+        } else if (resultAction.payload === 'Need login!') {
+          console.log('Access token expired, attempting to re-login...');
+          await handleReLogin(); // Handle re-login if token expired
         } else {
           console.error('Failed to fetch user data:', resultAction.payload || resultAction.error);
           Alert.alert('Error', 'Failed to fetch user data. Please try again.');
@@ -44,19 +110,22 @@ const ZipporaHome: React.FC = () => {
             routes: [{ name: 'Login/Login' }],
           });
         }
-      } catch (error) {
-        console.error('Unexpected error fetching user data:', error);
-        Alert.alert('Error', 'An unexpected error occurred while fetching user data.');
+      } else {
+        console.error('Missing credentials: Access Token or Member ID');
+        Alert.alert('Error', 'User credentials are missing. Please log in again.');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login/Login' }],
+        });
       }
-    } else {
-      console.error('Missing credentials: Access Token or Member ID');
-      Alert.alert('Error', 'User credentials are missing. Please log in again.');
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login/Login' }],
-      });
+    } catch (error) {
+      console.error('Unexpected error fetching user data:', error);
+      Alert.alert('Error', 'An unexpected error occurred while fetching user data.');
+    } finally {
+      setIsFetchingData(false); // Reset flag
     }
   };
+  
 
   const fetchZipporaData = async () => {
     await dispatch(fetchUserApartments());
@@ -71,13 +140,15 @@ const ZipporaHome: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-        if (accessToken && memberId) { // Wait until credentials are ready
-            fetchUserData();
-            fetchZipporaData();
-            setLoading(false);
-        }
-        else {
-          console.error('---Missing credentials: Access Token or Member ID');
+      const fetchData = async () => {
+        if (isFetchingData || isReloggingIn) return; // Prevent redundant calls
+  
+        if (accessToken && memberId) {
+          await fetchUserData();
+          await fetchZipporaData();
+          setLoading(false);
+        } else {
+          console.error('Missing credentials: Access Token or Member ID');
           setTimeout(() => {
             navigation.reset({
               index: 0,
@@ -85,8 +156,13 @@ const ZipporaHome: React.FC = () => {
             });
           }, 0);
         }
-    }, [dispatch, accessToken, memberId])
-);
+      };
+  
+      fetchData();
+    }, [accessToken, memberId, dispatch])
+  );
+  
+  
 
   const handleAPTInfo = () => {
     navigation.navigate('Zippora/ZipporaInfo')
@@ -128,9 +204,8 @@ const ZipporaHome: React.FC = () => {
             </View>
             <Icon name="arrow-forward-ios" color="green" size={24} style={styles.icon} />
           </TouchableOpacity>
-        
-          {apt.zipporaList.length == 0 ? null
-            :
+  
+          {apt.zipporaList.length == 0 ? null : (
             <View style={styles.zipporaOrderContainer}>
               {apt.zipporaList.map((locker) => (
                 <React.Fragment key={locker.cabinetId}>
@@ -144,42 +219,44 @@ const ZipporaHome: React.FC = () => {
                       <ZIPText style={styles.packageText}>{locker.storeCount} packages to pick up</ZIPText>
                     </View>
                   </View>
-
+  
                   {locker.storeList.map((order) => (
                     <React.Fragment key={order.pickCode}>
                       <View style={styles.zipporaOrders}>
                         <View style={styles.orderItem}>
-                          <ZIPText style={styles.courierName}>{ order.courierCompanyName }</ZIPText>
+                          <ZIPText style={styles.courierName}>{order.courierCompanyName}</ZIPText>
                           <ZIPText numberOfLines={1} style={styles.pickupCodeText}>
                             Pickup Code:
-                            <ZIPText style={styles.pickupCode}> { order.pickCode } </ZIPText>
+                            <ZIPText style={styles.pickupCode}> {order.pickCode} </ZIPText>
                           </ZIPText>
-                          <Text numberOfLines={1} style={styles.storeTime}>Store Time: { order.storeTime }</Text>
+                          <Text numberOfLines={1} style={styles.storeTime}>Store Time: {order.storeTime}</Text>
                         </View>
                       </View>
                     </React.Fragment>
                   ))}
-                  <View style={{height: 10}}/>
+                  <View style={{ height: 10 }} />
                 </React.Fragment>
               ))}
             </View>
-          }
+          )}
         </React.Fragment>
       ))}
   
-      {/* Round Button and Text */}
-      <View style={styles.subscriptionContainer}>
-        <TouchableOpacity
-          style={styles.roundButton}
-          activeOpacity={0.7}
-          onPress={handleSubscribeNavigation}
-        >
-          <Icon name="home" color="white" size={30} />
-        </TouchableOpacity>
-        <Text style={styles.subscriptionText}>Click Here to Subscribe to an Apartment</Text>
-      </View>
+      {/* Conditional rendering for subscription button */}
+      {apartmentList.length === 0 && (
+        <View style={styles.subscriptionContainer}>
+          <TouchableOpacity
+            style={styles.roundButton}
+            activeOpacity={0.7}
+            onPress={handleSubscribeNavigation}
+          >
+            <Icon name="home" color="white" size={30} />
+          </TouchableOpacity>
+          <Text style={styles.subscriptionText}>Click Here to Subscribe to an Apartment</Text>
+        </View>
+      )}
     </ScrollView>
-  );  
+  );    
 };
 
 const styles = StyleSheet.create({

@@ -80,6 +80,7 @@ export const fetchUserApartments = createAsyncThunk(
     try {
       const response = await zipporaApi.getZipporaList({ accessToken, memberId });
       const { ret, data, msg } = response;
+      console.log(data);
 
       if (ret === 0) {
         return {

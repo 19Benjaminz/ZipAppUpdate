@@ -20,9 +20,12 @@ const Register = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [phoneNum, setPhoneNum] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,19 +33,42 @@ const Register = () => {
 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const sendVcodeAction = async () => {
-    try {
-      setLoading(true);
-      const result = await dispatch(sendRegisterVcode(email)).unwrap();
-      console.log(result);
-      setLoading(false);
-    } catch (error) {
-      console.error("Failed to send verification code:", error);
+  const validateEmailFormat = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailValidation = () => {
+    if (!validateEmailFormat(email)) {
+      setEmailError('The email format is incorrect.');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handlePasswordValidation = () => {
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+    } else {
+      setPasswordError('');
     }
   };
   
+  const validatePhoneNumber = (phone: string) => {
+    const phoneRegex = /^[0-9]{10}$/; // Example: 10 digits
+    return phoneRegex.test(phone);
+  };
+  
+  const handlePhoneValidation = () => {
+    if (!validatePhoneNumber(phoneNum)) {
+      setPhoneError('The phone number format is incorrect.');
+    } else {
+      setPhoneError('');
+    }
+  };
+
   const handleSignUp = async () => {
-    console.log("Registering with email...");
+    console.log('Registering with email...');
     if (email) {
       await sendVcodeAction();
     }
@@ -54,8 +80,8 @@ const Register = () => {
     setFirstName(standardizedFirstName);
     setLastName(standardizedLastName);
     setPhoneNum(formattedPhone);
-    
-    navigation.navigate("Login/RegistrationVerificationPage", {
+
+    navigation.navigate('Login/RegistrationVerificationPage', {
       email,
       phoneNum,
       firstName,
@@ -64,19 +90,16 @@ const Register = () => {
       psd2: confirmPassword,
     });
   };
-  
-  
 
-  const signInButtonColor = () => {
-    return firstName && lastName && email && phoneNum && password && confirmPassword
-      ? 'rgba(42,187,103,1)'
-      : 'rgba(42,187,103,0.5)';
-  };
-
-  const signInTextColor = () => {
-    return firstName && lastName && email && phoneNum && password && confirmPassword
-      ? 'white'
-      : 'rgba(255,255,255,0.3)';
+  const sendVcodeAction = async () => {
+    try {
+      setLoading(true);
+      const result = await dispatch(sendRegisterVcode(email)).unwrap();
+      console.log(result);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to send verification code:', error);
+    }
   };
 
   return (
@@ -109,63 +132,104 @@ const Register = () => {
         />
 
         {/* Email Field */}
-        <Animatable.View style={{ height: 250 }}>
-          <CommonTextInput
-            leftTitle="Email"
-            placeholder="Enter E-mail address"
-            placeholderTextColor="lightgray"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={email}
-            keyboardType="email-address"
-            onChangeText={setEmail}
-          />
+        <CommonTextInput
+          leftTitle="Email"
+          placeholder="Enter E-mail address"
+          placeholderTextColor="lightgray"
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={email}
+          keyboardType="email-address"
+          onChangeText={(text) => {
+            setEmail(text);
+            if (emailError) handleEmailValidation();
+          }}
+          onEndEditing={handleEmailValidation}
+          isError={!!emailError} // Pass error state
+        />
+        {emailError ? (
+          <Text style={{ color: 'red', marginTop: 4, marginLeft: 8 }}>{emailError}</Text>
+        ) : null}
 
-          {/* Phone Number Field */}
-          <CommonTextInput
-            leftTitle="Phone Number"
-            placeholder="Enter Phone Number"
-            placeholderTextColor="lightgray"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="phone-pad"
-            value={phoneNum}
-            onChangeText={(text) => setPhoneNum(text.replace(/[^0-9]/g, ''))}
-          />
+        {/* Phone Number Field */}
+        <CommonTextInput
+          leftTitle="Phone Number"
+          placeholder="Enter Phone Number"
+          placeholderTextColor="lightgray"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="phone-pad"
+          value={phoneNum}
+          onChangeText={(text) => {
+            setPhoneNum(text.replace(/[^0-9]/g, '')); // Allow only numbers
+            if (phoneError) handlePhoneValidation(); // Revalidate if there's an error
+          }}
+          onEndEditing={handlePhoneValidation} // Validate on blur
+          isError={!!phoneError} // Highlight the field if there's an error
+        />
+        {phoneError ? (
+          <Text style={{ color: 'red', marginTop: 4, marginLeft: 8 }}>{phoneError}</Text>
+        ) : null}
 
-          {/* Password Fields */}
-          <CommonTextInput
-            leftTitle="Password"
-            placeholder="Enter Password"
-            placeholderTextColor="lightgray"
-            autoCapitalize="none"
-            autoCorrect={false}
-            secureTextEntry={!showPassword}
-            rightTitle={showPassword ? 'Hide' : 'Show'}
-            onRightClick={() => setShowPassword(!showPassword)}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <CommonTextInput
-            leftTitle="Confirm Password"
-            placeholder="Confirm Password"
-            placeholderTextColor="lightgray"
-            autoCapitalize="none"
-            autoCorrect={false}
-            secureTextEntry={!showConfirmPassword}
-            rightTitle={showConfirmPassword ? 'Hide' : 'Show'}
-            onRightClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-        </Animatable.View>
+        {/* Password Fields */}
+        <CommonTextInput
+          leftTitle="Password"
+          placeholder="Enter Password"
+          placeholderTextColor="lightgray"
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry={!showPassword}
+          rightTitle={showPassword ? 'Hide' : 'Show'}
+          onRightClick={() => setShowPassword(!showPassword)}
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            if (passwordError) handlePasswordValidation();
+          }}
+          onEndEditing={handlePasswordValidation}
+          textContentType="none"
+          autoComplete="off"
+        />
 
+        <CommonTextInput
+          leftTitle="Confirm Password"
+          placeholder="Confirm Password"
+          placeholderTextColor="lightgray"
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry={!showConfirmPassword}
+          rightTitle={showConfirmPassword ? 'Hide' : 'Show'}
+          onRightClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            if (passwordError) handlePasswordValidation();
+          }}
+          onEndEditing={handlePasswordValidation}
+          textContentType="none"
+          autoComplete="off"
+          isError={!!passwordError} // Highlight Confirm Password field if passwords don't match
+        />
+        {passwordError ? (
+          <Text style={{ color: 'red', marginTop: 4 }}>{passwordError}</Text>
+        ) : null}
+
+        {/* Sign Up Button */}
         <TouchableOpacity
           style={{
             height: 50,
-            backgroundColor: loading
-              ? 'rgba(42,187,103,0.3)'
-              : signInButtonColor(),
+            backgroundColor:
+              loading ||
+              !firstName ||
+              !lastName ||
+              !email ||
+              !phoneNum ||
+              !password ||
+              !confirmPassword ||
+              emailError ||
+              passwordError
+                ? 'rgba(42,187,103,0.5)' // Disabled color
+                : 'rgba(42,187,103,1)', // Active color
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 3,
@@ -173,9 +237,37 @@ const Register = () => {
           }}
           activeOpacity={loading ? 1 : 0.7}
           onPress={handleSignUp}
-          disabled={loading}
+          disabled={
+            loading ||
+            !firstName ||
+            !lastName ||
+            !email ||
+            !phoneNum ||
+            !password ||
+            !confirmPassword ||
+            !!emailError ||
+            !!passwordError
+          }
         >
-          <ZIPText style={{ fontSize: 18, color: signInTextColor() }}>Sign Up</ZIPText>
+          <ZIPText
+            style={{
+              fontSize: 18,
+              color:
+                loading ||
+                !firstName ||
+                !lastName ||
+                !email ||
+                !phoneNum ||
+                !password ||
+                !confirmPassword ||
+                emailError ||
+                passwordError
+                  ? 'rgba(255,255,255,0.3)' // Disabled text color
+                  : 'white', // Active text color
+            }}
+          >
+            Sign Up
+          </ZIPText>
         </TouchableOpacity>
       </KeyboardAwareScrollView>
     </View>

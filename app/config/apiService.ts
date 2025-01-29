@@ -4,11 +4,12 @@ import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
 
 // Example: Authentication API Calls
 export const authApi = {
-    login: async (credentials: { email?: string; phoneNum?: string; password: string }) => {
+    login: async (credentials: { email?: string; phoneNum?: string; userid?: string; password: string }) => {
         // Create FormData for the payload
         const payload = new FormData();
         if (credentials.email) payload.append('email', credentials.email);
         if (credentials.phoneNum) payload.append('phoneNum', credentials.phoneNum);
+        if (credentials.userid) payload.append('userid', credentials.userid);
         payload.append('psd', credentials.password); 
         // Make the API call with FormData
         return apiClient.post(API_ENDPOINTS.LOGIN.LOGIN, payload, {
@@ -226,9 +227,9 @@ export const apartmentApi = {
         })
 
         requestURL += `?${params.toString()}`;
-
         try {
             const response = await apiClient.get(requestURL);
+            console.log(response)
             return response.data; // Assume the response structure matches expectations
         } catch (error: any) {
             console.error('Error unsubscribe APT: ', error.message);
