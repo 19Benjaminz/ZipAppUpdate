@@ -4,7 +4,7 @@
     "slug": "ZipAppTwo",
     "version": "2.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/zipLogo.png",
+    "icon": "./assets/images/zipcodexpress_square.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -30,9 +30,6 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "networkSecurityConfig": {
-        "cleartextTrafficPermitted": true
-      },
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -51,7 +48,15 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

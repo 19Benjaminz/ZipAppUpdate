@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -107,7 +107,8 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      {/* <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}> */}
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack.Navigator initialRouteName="Zippora/ZipporaHome">
           <Stack.Screen
             name="Login/Login"
@@ -175,7 +176,7 @@ export default function RootLayout() {
             options={{ title: 'Logs', headerShown: true }}
           />
         </Stack.Navigator>
-      </NavigationContainer>
+      </ThemeProvider>
     </Provider>
   );
 }

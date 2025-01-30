@@ -20,8 +20,6 @@ export default function MainTabs() {
         const initializeAuth = async () => {
             const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
             const memberId = (await SecureStore.getItemAsync('memberId')) || '';
-            console.log(accessToken)
-            console.log(memberId)
             console.log("Initializing credentials...");
       
             dispatch(setAccessToken(accessToken));
@@ -80,13 +78,19 @@ export default function MainTabs() {
                 name="BarcodeScan"
                 children={() => <BarcodeScan key={Math.random()} />}
                 options={{
-                    tabBarButton: (props) => (
-                        <TouchableOpacity {...props} style={styles.cameraButtonContainer} activeOpacity={0.7}>
-                            <View style={styles.cameraButton}>
-                                <Icon name="camera" type="material" color="white" size={28} />
-                            </View>
-                        </TouchableOpacity>
-                    ),
+                    tabBarButton: (props) => {
+                        const cleanProps = Object.fromEntries(
+                            Object.entries(props).map(([key, value]) => [key, value === null ? undefined : value])
+                          );
+
+                        return (
+                            <TouchableOpacity {...cleanProps} style={styles.cameraButtonContainer} activeOpacity={0.7}>
+                                <View style={styles.cameraButton}>
+                                    <Icon name="camera" type="material" color="white" size={28} />
+                                </View>
+                            </TouchableOpacity>
+                        )
+                },
                 }}
             />
 
@@ -109,12 +113,14 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         justifyContent: 'center',
         alignItems: 'center',
+        alignSelf: 'center',
+        position: 'absolute',
         zIndex: 1,
     },
     cameraButton: {
         width: 60,
         height: 60,
-        marginBottom: 40,
+        marginBottom: 10,
         borderRadius: 30,
         backgroundColor: 'green',
         justifyContent: 'center',
