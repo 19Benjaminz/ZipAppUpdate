@@ -13,7 +13,7 @@ const HEADER_HEIGHT = Platform.OS === "ios" ? 44 : 56;
 const TAB_BAR_HEIGHT = Platform.OS === "ios" ? 80 : 60;
 const AVAILABLE_HEIGHT = SCREEN_HEIGHT - HEADER_HEIGHT - TAB_BAR_HEIGHT;
 
-export default function BarcodeScan() {
+export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (loading: boolean) => void }) {
   const dispatch = useAppDispatch();
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -22,10 +22,13 @@ export default function BarcodeScan() {
 
   useFocusEffect(
     React.useCallback(() => {
-      // Reset the camera state when screen is focused
-      setShowCamera(false); // Unmount camera
-      setTimeout(() => setShowCamera(true), 100); // Re-mount camera after unmounting
-      setScanned(false); // Reset scanned state
+      setShowCamera(false);
+      setCameraLoading(true); // Notify parent that camera is loading
+      setTimeout(() => {
+        setShowCamera(true);
+        setCameraLoading(false); // Notify parent that camera is ready
+      }, 500); // Adjust delay if needed
+      setScanned(false);
     }, [])
   );
 

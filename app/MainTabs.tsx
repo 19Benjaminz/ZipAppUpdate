@@ -14,6 +14,8 @@ const Tab = createBottomTabNavigator();
 export default function MainTabs() {
     const dispatch = useAppDispatch();
     const [loading, setLoading] = useState(true); // Add loading state
+    const [cameraLoading, setCameraLoading] = useState(false);
+
     const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
 
     useEffect(() => {
@@ -21,16 +23,15 @@ export default function MainTabs() {
             const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
             const memberId = (await SecureStore.getItemAsync('memberId')) || '';
             console.log("Initializing credentials...");
-      
+
             dispatch(setAccessToken(accessToken));
             dispatch(setMemberId(memberId));
-            setLoading(false); // Mark loading as complete
+            setLoading(false);
         };
 
-        if (accessToken == '' && memberId == '') {
+        if (!accessToken && !memberId) {
             initializeAuth();
-        }
-        else {
+        } else {
             setLoading(false);
         }
     }, [dispatch]);
@@ -70,13 +71,14 @@ export default function MainTabs() {
                 tabBarInactiveTintColor: 'gray',
                 tabBarShowLabel: false,
                 headerShown: false,
+                tabBarStyle: cameraLoading ? { display: "none" } : {}, // Hide tab bar when camera is loading
             })}
         >
             <Tab.Screen name="Home" component={ZipporaHome} />
             
             <Tab.Screen
                 name="BarcodeScan"
-                children={() => <BarcodeScan key={Math.random()} />}
+                children={() => <BarcodeScan setCameraLoading={setCameraLoading} key={Math.random()} />}
                 options={{
                     tabBarButton: (props) => {
                         const cleanProps = Object.fromEntries(
@@ -90,7 +92,7 @@ export default function MainTabs() {
                                 </View>
                             </TouchableOpacity>
                         )
-                },
+                    },
                 }}
             />
 
