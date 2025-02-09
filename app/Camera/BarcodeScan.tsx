@@ -6,6 +6,13 @@ import { useAppDispatch } from "../store";
 import Overlay from "@/components/Overlay";
 import { useFocusEffect } from "@react-navigation/native";
 import { scanQRCode } from "../features/zipporaInfoSlice";
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../components/types';
+
+// Define navigation type
+type BarcodeScanNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Zippora/BarcodeScan'>;
+
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
@@ -19,6 +26,7 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [showCamera, setShowCamera] = useState(true); // State to control camera rendering
+  const navigation = useNavigation<BarcodeScanNavigationProp>();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -47,7 +55,15 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
       console.error('Error Scaning qr Code', error);
       Alert.alert('Error', 'Failed to Scan QR code');
     }
-    Alert.alert("QR Code Scanned", `Data: ${data}`, [{ text: "OK", onPress: () => setScanned(false) }]);
+    Alert.alert("QR Code Scanned Success", "", [
+      {
+        text: "OK",
+        onPress: () => {
+          setScanned(false);
+          navigation.navigate("Zippora/ZipporaHome"); // Navigate back to Home
+        },
+      },
+    ]);
   };
 
   const toggleCameraFacing = () => {

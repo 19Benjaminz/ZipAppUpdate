@@ -56,8 +56,6 @@ export default function RootLayout() {
         console.log("Notification permission status:", enabled);
 
         if (enabled) {
-          console.log("Notification permissions granted.");
-
           // Retrieve FCM token
           const token = await messaging().getToken();
           console.log("FCM Token:", token);

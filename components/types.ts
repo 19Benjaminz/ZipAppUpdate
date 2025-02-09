@@ -15,6 +15,7 @@ export type RootStackParamList = {
       email: string;
     };
     "Zippora/ZipporaHome": undefined; // Entry point to a tab navigator
+    "Zippora/BarcodeScan": undefined; 
     "Profile/AboutUs": undefined;
     "Profile/PersonalInfo": undefined;
     "Profile/ModifyAddress": undefined;

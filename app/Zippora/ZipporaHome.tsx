@@ -20,7 +20,7 @@ import { getUser, setAccessToken } from '../features/userInfoSlice';
 import { fetchUserApartments } from '../features/zipporaInfoSlice';
 import { login } from '../features/authSlice';
 
-const ZipporaHome: React.FC = () => {
+const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({ setHomeLoading }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const { accessToken, memberId } = useAppSelector((state) => state.userInfo);

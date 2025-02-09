@@ -14,6 +14,8 @@ const Tab = createBottomTabNavigator();
 export default function MainTabs() {
     const dispatch = useAppDispatch();
     const [loading, setLoading] = useState(true); // Add loading state
+    const [homeLoading, setHomeLoading] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(false);
     const [cameraLoading, setCameraLoading] = useState(false);
 
     const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
@@ -22,7 +24,6 @@ export default function MainTabs() {
         const initializeAuth = async () => {
             const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
             const memberId = (await SecureStore.getItemAsync('memberId')) || '';
-            console.log("Initializing credentials...");
 
             dispatch(setAccessToken(accessToken));
             dispatch(setMemberId(memberId));
@@ -43,6 +44,8 @@ export default function MainTabs() {
             </View>
         );
     }
+
+    const isAnyScreenLoading = homeLoading || profileLoading || cameraLoading;
 
     return (
         <Tab.Navigator
@@ -71,10 +74,25 @@ export default function MainTabs() {
                 tabBarInactiveTintColor: 'gray',
                 tabBarShowLabel: false,
                 headerShown: false,
-                tabBarStyle: cameraLoading ? { display: "none" } : {}, // Hide tab bar when camera is loading
             })}
         >
-            <Tab.Screen name="Home" component={ZipporaHome} />
+            <Tab.Screen 
+                name="Home" 
+                children={() => <ZipporaHome setHomeLoading={setHomeLoading} />}
+                options={{
+                    tabBarButton: (props) => {
+                        const cleanProps = Object.fromEntries(
+                            Object.entries(props).map(([key, value]) => [key, value === null ? undefined : value])
+                        );
+
+                        return (
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={cameraLoading ? styles.disabledTab : {}}>
+                                <Icon name="home" type="material" color="gray" size={28} />
+                            </TouchableOpacity>
+                        )
+                },
+                }} 
+            />
             
             <Tab.Screen
                 name="BarcodeScan"
@@ -83,10 +101,10 @@ export default function MainTabs() {
                     tabBarButton: (props) => {
                         const cleanProps = Object.fromEntries(
                             Object.entries(props).map(([key, value]) => [key, value === null ? undefined : value])
-                          );
+                        );
 
                         return (
-                            <TouchableOpacity {...cleanProps} style={styles.cameraButtonContainer} activeOpacity={0.7}>
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={styles.cameraButtonContainer} activeOpacity={0.7}>
                                 <View style={styles.cameraButton}>
                                     <Icon name="camera" type="material" color="white" size={28} />
                                 </View>
@@ -96,7 +114,23 @@ export default function MainTabs() {
                 }}
             />
 
-            <Tab.Screen name="Profile" component={Profile} />
+            <Tab.Screen 
+                name="Profile" 
+                component={Profile} 
+                options={{
+                    tabBarButton: (props) => {
+                        const cleanProps = Object.fromEntries(
+                            Object.entries(props).map(([key, value]) => [key, value === null ? undefined : value])
+                        );
+
+                        return (
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={cameraLoading ? styles.disabledTab : {}}>
+                                <Icon name="person" type="material" color="gray" size={28} />
+                            </TouchableOpacity>
+                        )
+                    },
+                }} 
+            />
         </Tab.Navigator>
     );
 }
@@ -132,5 +166,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 3,
         elevation: 5,
+    },
+    disabledTab: {
+        opacity: 0.5, // Dim the button when disabled
     },
 });
