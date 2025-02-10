@@ -8,7 +8,7 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/ZipporaLogo-square@2x.png",
+      "image": "./assets/images/ZipporaLogo-square-large.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
