@@ -7,11 +7,6 @@
     "icon": "./assets/images/zipcodexpress_square.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/ZipporaLogo-square-large.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.unibox.express",
@@ -54,6 +49,22 @@
         {
           "ios": {
             "useFrameworks": "static"
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/ZipporaLogo-square@3x.png",
+          "ios": {
+            "image": "./assets/images/SplashScreen_1125x2436.png",
+            "enableFullScreenImage_legacy": true
+          },
+          "android": {
+            "image": "./assets/images/ZipporaLogo-square.png",
+            "resizeMode": "contain",
+            "imageWidth": "200"
           }
         }
       ]
