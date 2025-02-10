@@ -24,10 +24,11 @@ const PersonalInformation: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const { profile, member, accessToken, memberId } = useAppSelector((state) => state.userInfo);
+  //console.log(profile);
 
   const [avatar, setAvatar] = useState(profile.avatar || '');
-  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
 
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
     firstName: profile.firstName || '',
     lastName: profile.lastName || '',
@@ -44,11 +45,15 @@ const PersonalInformation: React.FC = () => {
     postalCode: profile.zipcode || '',
   });
 
+  const [houseHolderMember, setHouseHolderMember] = useState('');
+  const [newMember, setNewMember] = useState('');
+  const [isEditingHouseholdMember, setIsEditingHouseholdMember] = useState(false);
+
+
   const refreshData = useCallback(async () => {
     try {
       if (accessToken && memberId) {
         await dispatch(getUser({ accessToken, memberId })).unwrap();
-        console.log('Profile data refreshed');
       }
     } catch (error) {
       console.error('Error refreshing profile data:', error);
@@ -83,6 +88,8 @@ const PersonalInformation: React.FC = () => {
       state: profile.state || '',
       postalCode: profile.zipcode || '',
     });
+
+    setHouseHolderMember(profile.houseHolderMember || '');
   }, [profile, member]);
 
   const pickImage = async () => {
@@ -118,13 +125,13 @@ const PersonalInformation: React.FC = () => {
     }
   
     try {
-      // ✅ Ensure correct format for Android/iOS
+      //Ensure correct format for Android/iOS
       const formattedUri = Platform.OS === 'android' ? imageUri : `file://${imageUri}`;
   
-      // ✅ Hash the filename using MD5
+      //Hash the filename using MD5
       const hashedFileName = md5Hash(formattedUri) + '.jpg';
   
-      // ✅ Prepare FormData for upload
+      //Prepare FormData for upload
       let formData = new FormData();
       formData.append('avatar', {
         uri: formattedUri,
@@ -227,14 +234,70 @@ const PersonalInformation: React.FC = () => {
   const handleLogout = async () => {
     await dispatch(logout());
     console.log('logout success');
-    //await SecureStore.deleteItemAsync('accessToken');
-    //await SecureStore.deleteItemAsync('memberId');
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login/Login' }],
     });
     return
   }
+
+  const handleAddMember = () => {
+    if (newMember.trim() !== '') {
+        setHouseHolderMember((prev) => prev ? `${prev}, ${newMember.trim()}` : newMember.trim());
+        setNewMember('');
+    }
+  };
+
+  const handleSaveMembers = async () => {
+    if (newMember.trim() !== '') {
+        const updatedValue = houseHolderMember ? `${houseHolderMember}, ${newMember.trim()}` : newMember.trim();
+
+        try {
+            //Await the Redux action to get the real response
+            const response = await dispatch(updateUserProfile({
+                _accessToken: '',
+                _memberId: '',
+                householderMember: updatedValue
+            })).unwrap(); // ✅ Extracts the result from Redux
+
+            //Update local state AFTER Redux update
+            setHouseHolderMember(updatedValue);
+            setNewMember('');
+            setIsEditingHouseholdMember(false);
+
+            refreshData();
+        } catch (error) {
+            console.error('Error updating Household Members:', error);
+            Alert.alert('Error', 'Failed to update Household Members. Please try again.');
+        }
+    }
+  };
+
+  const handleDeleteMember = async (memberToRemove: string) => {
+    // Create updated household member list (remove selected member)
+    const updatedValue = houseHolderMember
+        .split(',')
+        .map(member => member.trim()) // Ensure no extra spaces
+        .filter(member => member !== memberToRemove) // Remove the selected member
+        .join(', '); // Reconstruct the string
+
+    try {
+        //Await Redux update before setting the new state
+        const response = await dispatch(updateUserProfile({
+            _accessToken: '',
+            _memberId: '',
+            householderMember: updatedValue
+        })).unwrap();
+
+        //Update state only after Redux successfully updates
+        setHouseHolderMember(updatedValue);
+
+        refreshData();
+    } catch (error) {
+        console.error('Error deleting household member:', error);
+        Alert.alert('Error', 'Failed to delete household member. Please try again.');
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
@@ -271,6 +334,81 @@ const PersonalInformation: React.FC = () => {
         </TouchableOpacity>
         <Text style={styles.addressText}>{formatAddress()}</Text>
       </View>
+
+      {/* Household member section Section */}
+      {/* <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Household Members</Text>
+        <TouchableOpacity style={styles.editButton} onPress={handleEditAddress}>
+          <Text style={styles.editButtonText}>Add</Text>
+        </TouchableOpacity>
+      </View> */}
+
+      <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Household Members</Text>
+
+          {/* Toggle between "Add" and "Cancel" button */}
+          <TouchableOpacity 
+              style={styles.editButton} 
+              onPress={() => setIsEditingHouseholdMember(!isEditingHouseholdMember)}
+          >
+              <Text style={styles.editButtonText}>{isEditingHouseholdMember ? 'Cancel' : 'Edit'}</Text>
+          </TouchableOpacity>
+
+          {/* Display household members in individual cells with a delete button */}
+          <View style={styles.householdMemberList}>
+              {houseHolderMember
+                  ? houseHolderMember.split(',').map((member, index) => (
+                      <View key={index} style={styles.householdMemberCell}>
+                          <Text style={styles.householdMemberText}>{member.trim()}</Text>
+
+                          {/* Show delete button only in edit mode */}
+                          {isEditingHouseholdMember && (
+                              <TouchableOpacity 
+                                  style={styles.deleteButton} 
+                                  onPress={() => handleDeleteMember(member.trim())}
+                              >
+                                  <Text style={styles.deleteButtonText}>Delete</Text>
+                              </TouchableOpacity>
+                          )}
+                      </View>
+                  ))
+                  : <Text style={styles.noMembersText}>No members added</Text>
+              }
+          </View>
+
+          {/* Show input field when adding a new member */}
+          {isEditingHouseholdMember && (
+              <View style={styles.addMemberContainer}>
+                  <TextInput
+                      style={styles.input}
+                      placeholder="Enter FULL Name"
+                      value={newMember}
+                      onChangeText={setNewMember}
+                  />
+
+                  {/* Buttons: Disabled if input is empty */}
+                  <View style={styles.buttonContainer}>
+                      <TouchableOpacity 
+                          style={[styles.addButton, newMember.trim() === '' && styles.disabledButton]} 
+                          onPress={handleAddMember}
+                          disabled={newMember.trim() === ''}
+                      >
+                          <Text style={styles.buttonText}>Add Another</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity 
+                          style={[styles.saveButton, newMember.trim() === '' && styles.disabledButton]} 
+                          onPress={handleSaveMembers}
+                          disabled={newMember.trim() === ''}
+                      >
+                          <Text style={styles.buttonText}>Save</Text>
+                      </TouchableOpacity>
+                  </View>
+              </View>
+          )}
+      </View>
+
+
 
       {/* Account Actions Section */}
       <View style={styles.section}>
@@ -379,6 +517,76 @@ const styles = StyleSheet.create({
     color: 'gray',
     marginBottom: 20,
   },
+  householdMemberContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  householdMemberText: {
+    fontSize: 16,
+    color: 'black',
+  },
+  addMemberContainer: {
+      marginTop: 10,
+  },
+  buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 10,
+  },
+  addButton: {
+      backgroundColor: 'blue',
+      padding: 10,
+      borderRadius: 5,
+      flex: 1,
+      marginRight: 5,
+      alignItems: 'center',
+  },
+  saveButton: {
+      backgroundColor: 'green',
+      padding: 10,
+      borderRadius: 5,
+      flex: 1,
+      marginLeft: 5,
+      alignItems: 'center',
+  },
+  disabledButton: {
+      backgroundColor: 'gray',
+      opacity: 0.5,
+  },
+  buttonText: {
+      color: 'white',
+      fontSize: 16,
+  },
+  householdMemberList: {
+    marginTop: 10,
+  },
+  householdMemberCell: {
+    flexDirection: 'row', // ✅ Align name and button in a row
+    justifyContent: 'space-between', // ✅ Pushes delete button to the right
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  noMembersText: {
+    fontSize: 14,
+    color: 'gray',
+    textAlign: 'center',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  }
 });
 
 export default PersonalInformation;

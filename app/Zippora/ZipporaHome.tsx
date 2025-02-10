@@ -84,6 +84,7 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
   const fetchUserData = async () => {
     if (isFetchingData) return; // Prevent multiple fetch calls
     try {
+      setHomeLoading(true);
       setIsFetchingData(true); // Set flag
   
       // Retrieve the latest accessToken
@@ -123,12 +124,15 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
       Alert.alert('Error', 'An unexpected error occurred while fetching user data.');
     } finally {
       setIsFetchingData(false); // Reset flag
+      setHomeLoading(false);
     }
   };
   
 
   const fetchZipporaData = async () => {
+    setHomeLoading(true);
     await dispatch(fetchUserApartments());
+    setHomeLoading(false);
   };
 
   const onRefresh = async () => {

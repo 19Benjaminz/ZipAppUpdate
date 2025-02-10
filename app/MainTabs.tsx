@@ -86,7 +86,7 @@ export default function MainTabs() {
                         );
 
                         return (
-                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={cameraLoading ? styles.disabledTab : {}}>
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={isAnyScreenLoading ? styles.disabledTab : {}}>
                                 <Icon name="home" type="material" color="gray" size={28} />
                             </TouchableOpacity>
                         )
@@ -96,7 +96,7 @@ export default function MainTabs() {
             
             <Tab.Screen
                 name="BarcodeScan"
-                children={() => <BarcodeScan setCameraLoading={setCameraLoading} key={Math.random()} />}
+                children={() => <BarcodeScan setCameraLoading={setCameraLoading} />}
                 options={{
                     tabBarButton: (props) => {
                         const cleanProps = Object.fromEntries(
@@ -116,7 +116,7 @@ export default function MainTabs() {
 
             <Tab.Screen 
                 name="Profile" 
-                component={Profile} 
+                children={() => <Profile setProfileLoading={setProfileLoading} />}
                 options={{
                     tabBarButton: (props) => {
                         const cleanProps = Object.fromEntries(
@@ -124,7 +124,7 @@ export default function MainTabs() {
                         );
 
                         return (
-                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={cameraLoading ? styles.disabledTab : {}}>
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={isAnyScreenLoading? styles.disabledTab : {}}>
                                 <Icon name="person" type="material" color="gray" size={28} />
                             </TouchableOpacity>
                         )

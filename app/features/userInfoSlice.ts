@@ -125,7 +125,7 @@ export const updateUserProfile = createAsyncThunk(
         nickName?: string;
         firstName?: string;
         lastName?: string;
-        houseHolderMember?: string;
+        householderMember?: string;
         state?: string;
         city?: string;
         zipcode?: string;
@@ -147,9 +147,14 @@ export const updateUserProfile = createAsyncThunk(
         // Ensure required fields are added
         profileData._accessToken = accessToken;
         profileData._memberId = memberId;
+
+        console.log("++++++++++++++++++++++++++++++++++")
+        console.log(profileData)
         
         const response = await profileApi.updateProfile(profileData);
         const { ret, msg } = response;
+        console.log("response: ", response);
+        console.log(msg);
   
         if (ret === 0) {
           console.log('Profile update successful:', msg);

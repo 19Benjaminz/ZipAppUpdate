@@ -31,7 +31,6 @@ export const authApi = {
     },
     sendRegisterVcode: async (email: string, flag: string = '') => {
         const requestURL = API_ENDPOINTS.LOGIN.SEND_VCODE;
-        console.log("Email for registration: ", email);
     
         // Create form-data payload
         const formData = new FormData();
@@ -229,7 +228,6 @@ export const apartmentApi = {
         requestURL += `?${params.toString()}`;
         try {
             const response = await apiClient.get(requestURL);
-            console.log(response)
             return response.data; // Assume the response structure matches expectations
         } catch (error: any) {
             console.error('Error unsubscribe APT: ', error.message);

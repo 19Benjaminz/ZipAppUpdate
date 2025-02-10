@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,7 +8,7 @@ import {
     RefreshControl,
     StyleSheet,
 } from 'react-native';
-import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
 import { RootStackParamList } from '../../components/types';
@@ -17,44 +17,48 @@ import { getUser } from '../features/userInfoSlice';
 
 interface ProfileItemProps {
     title: string;
-    subtitle?: string;
     icon: any;
     onPress: () => void;
 }
 
-const ProfileItem: React.FC<ProfileItemProps> = ({ title, subtitle, icon, onPress }) => (
-    <TouchableOpacity onPress={onPress} style={styles.itemContainer}>
+const ProfileItem: React.FC<ProfileItemProps> = ({ title, icon, onPress }) => (
+    <TouchableOpacity onPress={onPress} style={styles.itemContainer} disabled={false}>
         <Image source={icon} style={styles.itemIcon} />
         <ZIPText style={styles.itemText}>{title}</ZIPText>
-        {subtitle && <ZIPText style={styles.itemSubtitle}>{subtitle}</ZIPText>}
         <Icon name="arrow-forward-ios" color={'green'} size={20} style={styles.itemIconRight} />
     </TouchableOpacity>
 );
 
-const Profile: React.FC = () => {
+const Profile: React.FC<{ setProfileLoading: (loading: boolean) => void }> = ({ setProfileLoading }) => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
-    const isFocused = useIsFocused(); // React Navigation hook to detect screen focus
     const [loading, setLoading] = useState(false);
     const { profile, member, accessToken, memberId } = useAppSelector((state) => state.userInfo);
-    console.log(profile);
 
     const handleRefresh = async () => {
         try {
-            setLoading(true); // Start loading
-            await dispatch(getUser({ accessToken, memberId })).unwrap(); // Ensure the API resolves properly
+            setLoading(true); // Start local loading
+            setProfileLoading(true); // 🚀 Disable tab buttons in MainTabs
+
+            await dispatch(getUser({ accessToken, memberId })).unwrap();
+
         } catch (error) {
             console.error('Error refreshing profile data:', error);
         } finally {
-            setLoading(false); // End loading regardless of success or failure
+            setLoading(false);
+            setProfileLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (isFocused) {
-            handleRefresh(); // Refresh the data when the screen is focused
-        }
-    }, [isFocused]); // Dependency ensures it runs only when `isFocused` changes
+    useFocusEffect(
+        useCallback(() => {
+            handleRefresh(); // Fetch profile data when screen is focused
+
+            return () => {
+                setProfileLoading(false); // ✅ Ensure cleanup when navigating away
+            };
+        }, [dispatch, accessToken, memberId])
+    );
 
     const handleNavigation = (screen: any) => {
         navigation.navigate(screen);
@@ -69,16 +73,16 @@ const Profile: React.FC = () => {
             },
             {
                 title: 'Zippora Logs',
-                icon: require('../../assets/images/zipporalog.png'), // Replace with the correct icon path
+                icon: require('../../assets/images/zipporalog.png'),
                 screen: 'Zippora/ZipLogs' as keyof RootStackParamList,
             },
             {
-                title: 'Subscribe to New Aparment',
+                title: 'Subscribe to New Apartment',
                 icon: require('../../assets/images/apartment.png'),
                 screen: 'Zippora/SubToAPT' as keyof RootStackParamList,
             }
         ];
-    
+
         return items.map((item, index) => (
             <ProfileItem
                 key={index}
@@ -87,7 +91,7 @@ const Profile: React.FC = () => {
                 onPress={() => handleNavigation(item.screen)}
             />
         ));
-    };    
+    };
 
     return (
         <View style={styles.container}>
@@ -170,10 +174,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         color: 'black',
-    },
-    itemSubtitle: {
-        fontSize: 14,
-        color: 'gray',
     },
     itemIconRight: {
         marginLeft: 8,

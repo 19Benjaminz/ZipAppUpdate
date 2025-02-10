@@ -45,7 +45,6 @@ export const register = createAsyncThunk(
         try {
             const response = await authApi.register(credentials);
             const { ret, data, msg } = response.data;
-            console.log(response.data)
 
             if (ret === 0) {
                 // Successful register
@@ -53,7 +52,6 @@ export const register = createAsyncThunk(
                 return response.data;
             } else {
                 // Reject with the error message from the API
-                console.log("ret != 0")
                 return response.data.ret;
             }
         } catch (error: any) {
@@ -132,7 +130,6 @@ export const resetPassword = createAsyncThunk (
             if (ret === 0) {
                 // Successful register
                 const storedAccessToken = await SecureStore.getItemAsync('accessToken');
-                console.log('Store access token after logout:', storedAccessToken);
                 return response.data;
             } else {
                 // Reject with the error message from the API
@@ -190,10 +187,9 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(logout.fulfilled, (state, action) => {
-                console.log("Logout Success Success")
                 state.loading = false;
-                //SecureStore.deleteItemAsync("accessToken");
-                //SecureStore.deleteItemAsync("memberId");
+                SecureStore.deleteItemAsync("accessToken");
+                SecureStore.deleteItemAsync("memberId");
             })
             .addCase(logout.rejected, (state, action) => {
                 state.loading = false;

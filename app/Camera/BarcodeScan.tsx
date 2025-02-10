@@ -37,6 +37,8 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
         setCameraLoading(false); // Notify parent that camera is ready
       }, 500); // Adjust delay if needed
       setScanned(false);
+
+      
     }, [])
   );
 
