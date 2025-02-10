@@ -22,7 +22,14 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import messaging from '@react-native-firebase/messaging';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
-import SplashScreenComponent from '@/components/SplashScreen';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
+});
 
 const Stack = createNativeStackNavigator();
 
@@ -34,16 +41,10 @@ export default function RootLayout() {
 
   // Hide the splash screen once fonts are loaded
   useEffect(() => {
-    const prepare = async () => {
-      await SplashScreen.preventAutoHideAsync(); // Prevent splash from hiding too early
-      if (fontsLoaded) {
-        await SplashScreen.hideAsync(); // Hide splash when fonts are ready
-      }
-    };
-  
-    prepare();
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
   }, [fontsLoaded]);
-  
 
   // Firebase setup for FCM token and notifications
   useEffect(() => {
