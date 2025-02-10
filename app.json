@@ -56,7 +56,6 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#ffffff",
-          "image": "./assets/images/ZipporaLogo-square@3x.png",
           "ios": {
             "image": "./assets/images/SplashScreen_1125x2436.png",
             "enableFullScreenImage_legacy": true

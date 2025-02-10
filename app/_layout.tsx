@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DarkTheme, DefaultTheme, NavigationContainer, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -21,29 +21,48 @@ import ZipLogs from './Zippora/ZipLogs';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import messaging from '@react-native-firebase/messaging';
 import * as SecureStore from 'expo-secure-store';
-import { Alert } from 'react-native';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-SplashScreen.setOptions({
-  duration: 1000,
-  fade: true,
-});
+import { Alert, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [appReady, setAppReady] = useState(false);
   const [fontsLoaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  useEffect(() => {
+    const prepareSplashScreen = async () => {
+      console.log("Splash Screen Prevent Auto-Hide Running...");
+      await SplashScreen.preventAutoHideAsync();
+    };
+  
+    prepareSplashScreen();
+  }, []);
+
   // Hide the splash screen once fonts are loaded
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
+    const prepareApp = async () => {
+      try {
+        //await SplashScreen.preventAutoHideAsync(); 
+        // Wait for fonts to load
+        if (!fontsLoaded) return;
+
+        // Simulate additional app setup (e.g., Firebase, API calls)
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
+
+        setAppReady(true);
+
+        if (appReady) {
+          //await SplashScreen.hideAsync();
+        }
+      } catch (error) {
+        console.error("Error loading app:", error);
+      }
+    };
+
+    prepareApp();
   }, [fontsLoaded]);
 
   // Firebase setup for FCM token and notifications
@@ -104,9 +123,12 @@ export default function RootLayout() {
   }, []);
 
   // Render the app once fonts are loaded
-  if (!fontsLoaded) {
-    return null;
+  // Ensure app renders a white screen instead of black
+  if (!appReady) {
+    return <View style={{ flex: 1, backgroundColor: "#ffffff" }} />;
   }
+  console.log("App Ready State:", appReady);
+  console.log("Fonts Loaded:", fontsLoaded);
 
   return (
     <Provider store={store}>
