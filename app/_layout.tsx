@@ -50,12 +50,12 @@ export default function RootLayout() {
         if (!fontsLoaded) return;
 
         // Simulate additional app setup (e.g., Firebase, API calls)
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
 
         setAppReady(true);
 
         if (appReady) {
-          //await SplashScreen.hideAsync();
+          await SplashScreen.hideAsync();
         }
       } catch (error) {
         console.error("Error loading app:", error);
@@ -63,7 +63,7 @@ export default function RootLayout() {
     };
 
     prepareApp();
-  }, [fontsLoaded]);
+  }, [fontsLoaded, appReady]);
 
   // Firebase setup for FCM token and notifications
   useEffect(() => {

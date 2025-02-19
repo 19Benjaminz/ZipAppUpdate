@@ -4,13 +4,14 @@ import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
 
 // Example: Authentication API Calls
 export const authApi = {
-    login: async (credentials: { email?: string; phoneNum?: string; userid?: string; password: string }) => {
+    login: async (credentials: { email?: string; phoneNum?: string; userid?: string; password: string; deviceId?: string }) => {
         // Create FormData for the payload
         const payload = new FormData();
         if (credentials.email) payload.append('email', credentials.email);
         if (credentials.phoneNum) payload.append('phoneNum', credentials.phoneNum);
         if (credentials.userid) payload.append('userid', credentials.userid);
         payload.append('psd', credentials.password); 
+        if (credentials.deviceId) payload.append('deviceId', credentials.deviceId);
         // Make the API call with FormData
         return apiClient.post(API_ENDPOINTS.LOGIN.LOGIN, payload, {
             headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
