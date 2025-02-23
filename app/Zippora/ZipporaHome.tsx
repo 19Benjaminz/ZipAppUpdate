@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Alert,
@@ -19,6 +19,8 @@ import { useAppDispatch, useAppSelector } from '../store';
 import { getUser, setAccessToken } from '../features/userInfoSlice';
 import { fetchUserApartments } from '../features/zipporaInfoSlice';
 import { login } from '../features/authSlice';
+import { requestReview } from '@/components/rateApp';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({ setHomeLoading }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -29,6 +31,7 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
   const [loading, setLoading] = useState(true);
   const [isReloggingIn, setIsReloggingIn] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [launchCount, setLaunchCount] = useState(0);
 
   const handleReLogin = async () => {
     if (isReloggingIn) return; // Prevent multiple re-login attempts
@@ -165,6 +168,28 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
       fetchData();
     }, [accessToken, memberId, dispatch])
   );
+
+  useEffect(() => {
+    const trackAppLaunches = async () => {
+      try {
+        const count = await AsyncStorage.getItem("appLaunchCount");
+        let newCount = count ? parseInt(count) + 1 : 1;
+        await AsyncStorage.setItem("appLaunchCount", newCount.toString());
+        setLaunchCount(newCount);
+        console.log("Launch Count: ", newCount);
+
+        // Show the rating prompt after 5 launches
+        if (newCount >= 5 && newCount % 5 === 0) {
+          requestReview();
+          await AsyncStorage.setItem("appLaunchCount", '0');
+        }
+      } catch (error) {
+        console.error("Error tracking app launches:", error);
+      }
+    };
+
+    trackAppLaunches();
+  }, []);
   
   
 
