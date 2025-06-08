@@ -22,6 +22,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import messaging from '@react-native-firebase/messaging';
 import * as SecureStore from 'expo-secure-store';
 import { Alert, View } from 'react-native';
+import * as Notifications from "expo-notifications";
 
 const Stack = createNativeStackNavigator();
 
@@ -89,10 +90,17 @@ export default function RootLayout() {
 
           // Handle foreground notifications
           messaging().onMessage(async (remoteMessage) => {
-            Alert.alert(
-              'New Notification',
-              JSON.stringify(remoteMessage.notification)
-            );
+            console.log("Foreground Notification:", remoteMessage);
+
+            // Show local notification when receiving FCM while in foreground
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: remoteMessage.notification?.title ?? "New Notification",
+                body: remoteMessage.notification?.body ?? "You have a new message",
+                data: remoteMessage.data, // Pass custom data if needed
+              },
+              trigger: null, // Immediately show the notification
+            });
           });
 
           // Handle notifications opened from the background

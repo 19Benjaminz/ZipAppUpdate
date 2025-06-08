@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../config/apiService'; // Adjust the import path based on your project structure
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface AuthState {
     loading: boolean;
@@ -129,7 +130,7 @@ export const resetPassword = createAsyncThunk (
 
             if (ret === 0) {
                 // Successful register
-                const storedAccessToken = await SecureStore.getItemAsync('accessToken');
+                await SecureStore.getItemAsync('accessToken');
                 return response.data;
             } else {
                 // Reject with the error message from the API
@@ -190,6 +191,7 @@ const authSlice = createSlice({
                 state.loading = false;
                 SecureStore.deleteItemAsync("accessToken");
                 SecureStore.deleteItemAsync("memberId");
+                AsyncStorage.removeItem("appLaunchCount");
             })
             .addCase(logout.rejected, (state, action) => {
                 state.loading = false;
