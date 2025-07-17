@@ -5,6 +5,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useAppDispatch } from '../store';
 import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
@@ -18,7 +22,7 @@ const ForgotPasswordForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const route = useRoute();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { memberId, email } = route.params as { memberId: string, email: string };
+  const { memberId, email } = route.params as { memberId: string; email: string };
 
   const [form, setForm] = useState({
     memberId: memberId,
@@ -55,7 +59,14 @@ const ForgotPasswordForm: React.FC = () => {
 
     try {
       // Simulate API request to reset password
-      const response = await dispatch(resetPassword({memberId: memberId, psd1: md5Hash(newPassword), psd2: md5Hash(confirmPassword), vcode: verificationCode}));
+      const response = await dispatch(
+        resetPassword({
+          memberId: memberId,
+          psd1: md5Hash(newPassword),
+          psd2: md5Hash(confirmPassword),
+          vcode: verificationCode,
+        })
+      );
       console.log('Resetting password for email:', email);
       Alert.alert('Success', 'Password has been reset successfully.');
       navigation.reset({
@@ -68,84 +79,105 @@ const ForgotPasswordForm: React.FC = () => {
     }
   };
 
+  // Handle keyboard dismissal on return key press
+  const handleSubmitEditing = () => {
+    Keyboard.dismiss();
+  };
+
   return (
-    <View style={styles.container}>
-        <ZIPText style={styles.title}>Reset Password</ZIPText>
-        <ZIPText style={styles.subtitle}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          <ZIPText style={styles.title}>Reset Password</ZIPText>
+          <ZIPText style={styles.subtitle}>
             Enter the verification code sent to {email}.
-        </ZIPText>
+          </ZIPText>
 
-      <View style={styles.fieldContainer}>
-        <ZIPText style={styles.label}>Verification Code</ZIPText>
-        <View style={styles.passwordContainer}>
-            <TextInput
-            style={styles.input}
-            placeholder="Enter verification code"
-            value={form.verificationCode}
-            onChangeText={(text) => handleChange('verificationCode', text)}
-            />
-        </View>
-      </View>
+          <View style={styles.fieldContainer}>
+            <ZIPText style={styles.label}>Verification Code</ZIPText>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter verification code"
+                value={form.verificationCode}
+                onChangeText={(text) => handleChange('verificationCode', text)}
+                returnKeyType="done" // Add Done button
+                onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+              />
+            </View>
+          </View>
 
-      <View style={styles.fieldContainer}>
-        <ZIPText style={styles.label}>New Password</ZIPText>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.input}
-            secureTextEntry={!showPassword.newPassword}
-            placeholder="Enter new password"
-            value={form.newPassword}
-            onChangeText={(text) => handleChange('newPassword', text)}
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => handleTogglePasswordVisibility('newPassword')}
-          >
-            <MaterialIcons
-              name={showPassword.newPassword ? 'visibility' : 'visibility-off'}
-              size={24}
-              color="gray"
-            />
+          <View style={styles.fieldContainer}>
+            <ZIPText style={styles.label}>New Password</ZIPText>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.input}
+                secureTextEntry={!showPassword.newPassword}
+                placeholder="Enter new password"
+                value={form.newPassword}
+                onChangeText={(text) => handleChange('newPassword', text)}
+                returnKeyType="done" // Add Done button
+                onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => handleTogglePasswordVisibility('newPassword')}
+              >
+                <MaterialIcons
+                  name={showPassword.newPassword ? 'visibility' : 'visibility-off'}
+                  size={24}
+                  color="gray"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.fieldContainer}>
+            <ZIPText style={styles.label}>Confirm New Password</ZIPText>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.input}
+                secureTextEntry={!showPassword.confirmPassword}
+                placeholder="Confirm new password"
+                value={form.confirmPassword}
+                onChangeText={(text) => handleChange('confirmPassword', text)}
+                returnKeyType="done" // Add Done button
+                onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => handleTogglePasswordVisibility('confirmPassword')}
+              >
+                <MaterialIcons
+                  name={showPassword.confirmPassword ? 'visibility' : 'visibility-off'}
+                  size={24}
+                  color="gray"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <ZIPText style={styles.buttonText}>Reset Password</ZIPText>
           </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.fieldContainer}>
-        <ZIPText style={styles.label}>Confirm New Password</ZIPText>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.input}
-            secureTextEntry={!showPassword.confirmPassword}
-            placeholder="Confirm new password"
-            value={form.confirmPassword}
-            onChangeText={(text) => handleChange('confirmPassword', text)}
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => handleTogglePasswordVisibility('confirmPassword')}
-          >
-            <MaterialIcons
-              name={showPassword.confirmPassword ? 'visibility' : 'visibility-off'}
-              size={24}
-              color="gray"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <ZIPText style={styles.buttonText}>Reset Password</ZIPText>
-      </TouchableOpacity>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  innerContainer: {
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: 'white',
   },
   title: {
     fontSize: 24,

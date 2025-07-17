@@ -171,6 +171,35 @@ export const profileApi = {
             throw error;
         }
     },
+    updateHouseholdMember: async (profileData: {
+        _accessToken: string;
+        _memberId: string;
+        householderMember: string;
+    }) => {
+        const payload = new FormData();
+
+        // Append required fields
+        payload.append('_accessToken', profileData._accessToken);
+        payload.append('_memberId', profileData._memberId);
+        payload.append('householderMember', profileData.householderMember);
+
+        const requestURL = API_ENDPOINTS.PROFILE.UPDATE_HOUSEHOLD_MEMBER;
+        try {
+            const response = await apiClient.post(
+                requestURL, // Replace with actual API endpoint
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data', // Ensure correct handling of form data
+                    },
+                }
+            );
+            return response.data; // Assume the response contains success status
+        } catch (error: any) {
+            console.error('Error updating profile API service:', error.message);
+            throw error;
+        }
+    },
 };
 
 // Example: Apartment API Calls

@@ -17,6 +17,7 @@ export default function MainTabs() {
     const [homeLoading, setHomeLoading] = useState(false);
     const [profileLoading, setProfileLoading] = useState(false);
     const [cameraLoading, setCameraLoading] = useState(false);
+    const [curScreen, setCurScreen] = useState('Home')
 
     const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
 
@@ -84,10 +85,12 @@ export default function MainTabs() {
                         const cleanProps = Object.fromEntries(
                             Object.entries(props).map(([key, value]) => [key, value === null ? undefined : value])
                         );
-
+                        const { onPress, accessibilityState, ...rest } = props;
+                        const isSelected = accessibilityState?.selected;
+                        
                         return (
                             <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={isAnyScreenLoading ? styles.disabledTab : {}}>
-                                <Icon name="home" type="material" color="gray" size={28} />
+                                <Icon name="home" type="material" size={28} color={isSelected ? 'green' : 'gray'}/>
                             </TouchableOpacity>
                         )
                 },
@@ -122,10 +125,12 @@ export default function MainTabs() {
                         const cleanProps = Object.fromEntries(
                             Object.entries(props).map(([key, value]) => [key, value === null ? undefined : value])
                         );
+                        const { onPress, accessibilityState, ...rest } = props;
+                        const isSelected = accessibilityState?.selected;
 
                         return (
                             <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={isAnyScreenLoading? styles.disabledTab : {}}>
-                                <Icon name="person" type="material" color="gray" size={28} />
+                                <Icon name="person" type="material" size={28} color={isSelected ? 'green' : 'gray'}/>
                             </TouchableOpacity>
                         )
                     },

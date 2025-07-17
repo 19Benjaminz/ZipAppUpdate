@@ -8,7 +8,11 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
-  Image
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { md5Hash } from '../Actions/ToMD5';
 import { useNavigation } from '@react-navigation/native';
@@ -28,7 +32,7 @@ const Login = () => {
   const { loading = false, error = null } = useAppSelector((state: RootState) => state.auth || {});
 
   const handleLogin = async () => {
-    console.log("clicking loging")
+    console.log("clicking login");
     if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -41,7 +45,7 @@ const Login = () => {
       ...(deviceId && { deviceId }),
     };
 
-    console.log(credentials)
+    console.log(credentials);
 
     try {
       const resultAction = await dispatch(login(credentials));
@@ -61,13 +65,13 @@ const Login = () => {
           typeof resultAction.payload === 'string'
             ? resultAction.payload
             : 'Please try again.';
-        Alert.alert('Login Failed ------ 1', errorMessage);
+        // Alert.alert('Login Failed', errorMessage);
       }
     } catch (err: any) {
       console.error('Unexpected error:', err);
       const errorMessage =
-      err.response?.data?.message || err.message || 'Unexpected error occurred';
-      Alert.alert('Login Failed', errorMessage);
+        err.response?.data?.message || err.message || 'Unexpected error occurred';
+      // Alert.alert('Login Failed', errorMessage);
     }
   };
 
@@ -79,87 +83,106 @@ const Login = () => {
     navigation.navigate('Login/ForgotPasswordEmail');
   };
 
+  // Handle keyboard dismissal on return key press
+  const handleSubmitEditing = () => {
+    Keyboard.dismiss();
+  };
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          <StatusBar barStyle="dark-content" />
 
-      <Image
-        source={require('../../assets/images/zipLogo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+          <Image
+            source={require('../../assets/images/zipLogo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-    
-      <View style={styles.formContainer}>
-      <TextInput
-        placeholder="Email"
-        value={formData.email}
-        onChangeText={(text) => { 
-          setFormData((prev) => ({ ...prev, email: text }));
-        }}
-        onEndEditing={(e) => {
-          // Finalize the value when editing ends
-          const text = e.nativeEvent.text;
-          setTimeout(() => {
-            setFormData((prev) => ({ ...prev, email: text }));
-          }, 0);
-        }}
-        style={styles.input}
-        keyboardType="email-address"
-        textContentType="username"
-        autoComplete="username"
-        autoCapitalize="none"
-      />
+          <View style={styles.formContainer}>
+            <TextInput
+              placeholder="Email"
+              value={formData.email}
+              onChangeText={(text) => {
+                setFormData((prev) => ({ ...prev, email: text }));
+              }}
+              onEndEditing={(e) => {
+                const text = e.nativeEvent.text;
+                setTimeout(() => {
+                  setFormData((prev) => ({ ...prev, email: text }));
+                }, 0);
+              }}
+              style={styles.input}
+              keyboardType="email-address"
+              textContentType="username"
+              autoComplete="username"
+              autoCapitalize="none"
+              returnKeyType="done" // Add Done button
+              onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+            />
 
-        <TextInput
-          placeholder="Password"
-          secureTextEntry
-          onChangeText={(text) => setFormData({ ...formData, password: text })}
-          style={styles.input}
-          textContentType="password"
-          autoComplete="password"
-          value={formData.password}
-        />
+            <TextInput
+              placeholder="Password"
+              secureTextEntry
+              onChangeText={(text) => setFormData({ ...formData, password: text })}
+              style={styles.input}
+              textContentType="password"
+              autoComplete="password"
+              value={formData.password}
+              returnKeyType="done" // Add Done button
+              onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+            />
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
-        <TouchableOpacity
-          style={[styles.loginButton, loading && styles.disabledButton]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.loginText}>Login</Text>
-          )}
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.loginButton, loading && styles.disabledButton]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.loginText}>Login</Text>
+              )}
+            </TouchableOpacity>
 
-        <TouchableOpacity onPress={navigateToForgotPassword} style={styles.forgotPasswordContainer}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={navigateToForgotPassword}
+              style={styles.forgotPasswordContainer}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
 
-        <View style={styles.separatorContainer}>
-          <View style={styles.separatorLine} />
-          <Text style={styles.separatorText}>OR</Text>
-          <View style={styles.separatorLine} />
+            <View style={styles.separatorContainer}>
+              <View style={styles.separatorLine} />
+              <Text style={styles.separatorText}>OR</Text>
+              <View style={styles.separatorLine} />
+            </View>
+
+            <TouchableOpacity style={styles.registerButton} onPress={navigateToRegister}>
+              <Text style={styles.registerButtonText}>Register</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <TouchableOpacity style={styles.registerButton} onPress={navigateToRegister}>
-          <Text style={styles.registerButtonText}>Register</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: 'white' },
+  innerContainer: { flex: 1, padding: 16 },
   logo: {
-    width: '50%', // Adjust width and height as needed
+    width: '50%',
     height: '15%',
-    alignSelf: 'center', // Center the logo horizontally
-    marginBottom: 5, // Add space between the logo and the form
+    alignSelf: 'center',
+    marginBottom: 5,
   },
   formContainer: { paddingTop: 20 },
   input: { borderBottomWidth: 1, marginBottom: 16, borderColor: 'gray', padding: 10 },
@@ -174,7 +197,7 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: 'gray',
   },
-  loginText: { color: 'white', fontSize: 16 },
+  loginText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   errorText: { color: 'red', marginBottom: 16 },
   separatorContainer: {
     flexDirection: 'row',

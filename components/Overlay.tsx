@@ -36,7 +36,7 @@ export default function Overlay({ availableHeight }: { availableHeight: number }
             height: Platform.OS === "ios" 
                 ? (availableHeight - SCAN_BOX_SIZE) / 2 - availableHeight / 30
                 :
-                (availableHeight - SCAN_BOX_SIZE) / 2 - availableHeight / 60,
+                (availableHeight - SCAN_BOX_SIZE) / 2 - availableHeight / 32,
             bottom: 0,
             top: undefined,
           },
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   },
   container: {
     position: "absolute",
-    top: "48.4%",
+    top: "49.3%",
     left: "47.4%",
     marginTop: -(SCAN_BOX_SIZE / 2),
     marginLeft: -(SCAN_BOX_SIZE / 2),

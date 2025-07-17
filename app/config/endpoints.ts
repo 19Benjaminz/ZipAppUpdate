@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
       GET_CREDIT_CARD_LIST: 'CardCredit/getCardCreditList',
       GET_STATE_LIST: 'state/getStateList',
       GET_TRANSACTION_LIST: 'transaction/getTransactionList',
+      UPDATE_HOUSEHOLD_MEMBER: 'Profile/updateProfileN',
     },
     VCODE: {
       CHECK: 'VCode/checkVCode',

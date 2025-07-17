@@ -14,7 +14,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch, useAppSelector } from '../store';
-import { getUser, updateUserProfile } from '../features/userInfoSlice';
+import { getUser, updateHouseholdMember, updateUserProfile } from '../features/userInfoSlice';
 import { logout } from '../features/authSlice';
 import { md5Hash } from '../Actions/ToMD5';
 import * as ImagePicker from 'expo-image-picker';
@@ -48,12 +48,17 @@ const PersonalInformation: React.FC = () => {
   const [houseHolderMember, setHouseHolderMember] = useState('');
   const [newMember, setNewMember] = useState('');
   const [isEditingHouseholdMember, setIsEditingHouseholdMember] = useState(false);
+  const [isUpdatingLocally, setIsUpdatingLocally] = useState(false);
 
+  useEffect(() => {
+    console.log('houseHolderMember updated:', houseHolderMember);
+  }, [houseHolderMember]);
 
   const refreshData = useCallback(async () => {
     try {
       if (accessToken && memberId) {
-        await dispatch(getUser({ accessToken, memberId })).unwrap();
+        const response = await dispatch(getUser({ accessToken, memberId })).unwrap();
+        console.log('getUser response:', response);
       }
     } catch (error) {
       console.error('Error refreshing profile data:', error);
@@ -73,24 +78,24 @@ const PersonalInformation: React.FC = () => {
   );
 
   useEffect(() => {
-    setPersonalInfo({
-      firstName: profile.firstName || '',
-      lastName: profile.lastName || '',
-      nickName: profile.nickName || '',
-      email: member.email || '',
-      phone: member.phone || '',
-    });
-
-    setAddress({
-      addressLine1: profile.addressLine1 || '',
-      addressLine2: profile.addressLine2 || '',
-      city: profile.city || '',
-      state: profile.state || '',
-      postalCode: profile.zipcode || '',
-    });
-
-    setHouseHolderMember(profile.houseHolderMember || '');
-  }, [profile, member]);
+    if (!isUpdatingLocally) {
+        setPersonalInfo({
+            firstName: profile.firstName || '',
+            lastName: profile.lastName || '',
+            nickName: profile.nickName || '',
+            email: member.email || '',
+            phone: member.phone || '',
+        });
+        setAddress({
+            addressLine1: profile.addressLine1 || '',
+            addressLine2: profile.addressLine2 || '',
+            city: profile.city || '',
+            state: profile.state || '',
+            postalCode: profile.zipcode || '',
+        });
+        setHouseHolderMember(profile.houseHolderMember || '');
+    }
+}, [profile, member, isUpdatingLocally]);
 
   const pickImage = async () => {
     // Request permission
@@ -254,13 +259,14 @@ const PersonalInformation: React.FC = () => {
 
         try {
             //Await the Redux action to get the real response
-            const response = await dispatch(updateUserProfile({
+            const response = await dispatch(updateHouseholdMember({
                 _accessToken: '',
                 _memberId: '',
                 householderMember: updatedValue
             })).unwrap(); // ✅ Extracts the result from Redux
 
             //Update local state AFTER Redux update
+            console.log("Add New HouseHolderMemebr: ", updatedValue)
             setHouseHolderMember(updatedValue);
             setNewMember('');
             setIsEditingHouseholdMember(false);
@@ -273,30 +279,32 @@ const PersonalInformation: React.FC = () => {
     }
   };
 
-  const handleDeleteMember = async (memberToRemove: string) => {
-    // Create updated household member list (remove selected member)
-    const updatedValue = houseHolderMember
-        .split(',')
-        .map(member => member.trim()) // Ensure no extra spaces
-        .filter(member => member !== memberToRemove) // Remove the selected member
-        .join(', '); // Reconstruct the string
-
-    try {
-        //Await Redux update before setting the new state
-        const response = await dispatch(updateUserProfile({
-            _accessToken: '',
-            _memberId: '',
-            householderMember: updatedValue
-        })).unwrap();
-
-        //Update state only after Redux successfully updates
-        setHouseHolderMember(updatedValue);
-
-        refreshData();
-    } catch (error) {
-        console.error('Error deleting household member:', error);
-        Alert.alert('Error', 'Failed to delete household member. Please try again.');
-    }
+  const handleDeleteMember = async (index: number) => {
+      console.log("HHM before deleting: ", houseHolderMember);
+      const members = houseHolderMember.split(',').map(member => member.trim());
+      if (index < 0 || index >= members.length) {
+          console.warn('Invalid index for deletion:', index);
+          return;
+      }
+      const updatedMembers = members.filter((_, i) => i !== index);
+      const updatedValue = updatedMembers.join(', ');
+      console.log("New HouseHolderMemebr: ", updatedValue);
+      try {
+          setIsUpdatingLocally(true);
+          const response = await dispatch(updateHouseholdMember({
+              _accessToken: accessToken, // Fix hardcoded value
+              _memberId: memberId,       // Fix hardcoded value
+              householderMember: updatedValue || ''
+          })).unwrap();
+          console.log('Redux update response:', response);
+          setHouseHolderMember(updatedValue);
+          await refreshData();
+          setIsUpdatingLocally(false);
+      } catch (error) {
+          console.error('Error deleting household member:', error);
+          setIsUpdatingLocally(false);
+          Alert.alert('Error', 'Failed to delete household member. Please try again.');
+      }
   };
 
   return (
@@ -365,7 +373,7 @@ const PersonalInformation: React.FC = () => {
                           {isEditingHouseholdMember && (
                               <TouchableOpacity 
                                   style={styles.deleteButton} 
-                                  onPress={() => handleDeleteMember(member.trim())}
+                                  onPress={() => handleDeleteMember(index)}
                               >
                                   <Text style={styles.deleteButtonText}>Delete</Text>
                               </TouchableOpacity>

@@ -194,6 +194,46 @@ export const updateUserProfile = createAsyncThunk(
     }
   );
 
+  export const updateHouseholdMember = createAsyncThunk(
+    'userInfo/updateHouseholdMember',
+    async (
+      profileData: {
+        _accessToken: string;
+        _memberId: string;
+        householderMember: string;
+      },
+      thunkAPI
+    ) => {
+      try {
+        const state: any = thunkAPI.getState();
+        const { accessToken, memberId } = state.userInfo;
+  
+        // Ensure required fields are added
+        profileData._accessToken = accessToken;
+        profileData._memberId = memberId;
+
+        console.log("HOUSEHOLD MEMBER PROFILE DATA: ", profileData)
+        
+        const response = await profileApi.updateHouseholdMember(profileData);
+        const { ret, msg } = response;
+        console.log("response: ", response);
+        console.log(msg);
+  
+        if (ret === 0) {
+          console.log('Profile update successful:', msg);
+          // Return only the submitted profile data
+          return profileData;
+        } else {
+          return thunkAPI.rejectWithValue(msg || 'Failed to update profile');
+        }
+      } catch (error: any) {
+        return thunkAPI.rejectWithValue(
+          error.response?.data?.message || 'Unexpected error occurred'
+        );
+      }
+    }
+  );
+
 const dataSlice = createSlice({
   name: 'userData',
   initialState,
@@ -243,6 +283,18 @@ const dataSlice = createSlice({
         };
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
+        console.error('Error updating profile:', action.payload as string | undefined);
+      })
+            .addCase(updateHouseholdMember.pending, (state) => {
+        // Optionally handle loading state
+      })
+      .addCase(updateHouseholdMember.fulfilled, (state, action: PayloadAction<{ _accessToken: string; _memberId: string; householderMember: string }>) => {
+        state.profile = {
+          ...state.profile,
+          houseHolderMember: action.payload.householderMember,
+        };
+      })
+      .addCase(updateHouseholdMember.rejected, (state, action) => {
         console.error('Error updating profile:', action.payload as string | undefined);
       });
   },

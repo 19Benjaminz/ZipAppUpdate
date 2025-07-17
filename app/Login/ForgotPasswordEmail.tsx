@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useAppDispatch } from '../store';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -25,7 +29,7 @@ const ForgotPasswordEmail: React.FC = () => {
 
     try {
       // Simulate API request to send verification code
-      const data = await dispatch(sendForgotPasswordVcode(email))
+      const data = await dispatch(sendForgotPasswordVcode(email));
       const memberId = data.payload.memberId;
       console.log('Sending verification code to email:', email);
       Alert.alert('Success', 'Verification code sent to your email.');
@@ -38,30 +42,49 @@ const ForgotPasswordEmail: React.FC = () => {
     }
   };
 
+  // Handle keyboard dismissal on return key press
+  const handleSubmitEditing = () => {
+    Keyboard.dismiss();
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Forgot Password</Text>
-      <Text style={styles.subtitle}>Enter your email address to get a verification code.</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleGetCode}>
-        <Text style={styles.buttonText}>Get Code</Text>
-      </TouchableOpacity>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          <Text style={styles.title}>Forgot Password</Text>
+          <Text style={styles.subtitle}>
+            Enter your email address to get a verification code.
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            returnKeyType="done" // Add Done button
+            onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+          />
+          <TouchableOpacity style={styles.button} onPress={handleGetCode}>
+            <Text style={styles.buttonText}>Get Code</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  innerContainer: {
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: 'white',
   },
   title: {
     fontSize: 24,

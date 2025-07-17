@@ -112,9 +112,9 @@ const Profile: React.FC<{ setProfileLoading: (loading: boolean) => void }> = ({ 
                 </TouchableOpacity>
                 <View style={styles.itemsContainer}>{renderProfileItems()}</View>
             </ScrollView>
-            <View style={styles.versionContainer}>
+            {/* <View style={styles.versionContainer}>
                 <Text style={styles.versionText}>Version: 0.0.0</Text>
-            </View>
+            </View> */}
         </View>
     );
 };

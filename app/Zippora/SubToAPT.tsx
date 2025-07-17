@@ -31,9 +31,7 @@ const SubToAPT = () => {
   const [zipcode, setZipcode] = useState('');
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(
-    null
-  );
+  const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(null);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [selectedUnitName, setSelectedUnitName] = useState('');
@@ -102,7 +100,7 @@ const SubToAPT = () => {
 
   const handleUnitSelect = (unitId: string, unitName: string) => {
     setSelectedUnitId(unitId);
-    setSelectedUnitName(unitName)
+    setSelectedUnitName(unitName);
   };
 
   const filteredUnits = (units: Unit[]) => {
@@ -119,7 +117,7 @@ const SubToAPT = () => {
         const bindApartmentAction = await dispatch(
           bindApartment({ apartmentId: selectedApartmentId, unitId: selectedUnitId })
         ).unwrap();
-  
+
         // Initialize address object
         const aptAddress = {
           state: '',
@@ -128,31 +126,31 @@ const SubToAPT = () => {
           addressline1: '',
           addressline2: '',
         };
-  
+
         // Trim and split the address into parts
         const addressParts = selectedAddress.split(',').map((part) => part.trim());
-  
+
         // Extract last part for country (e.g., "USA")
         const country = addressParts.pop();
-  
+
         // Extract second last part for "State" and "Zipcode"
         const stateZipMatch = addressParts.pop()?.match(/([A-Z]{2})(?:\s*(\d{5}))?/);
         if (stateZipMatch) {
           aptAddress.state = stateZipMatch[1]; // State
         }
-  
+
         // Extract city (now second-to-last part)
         aptAddress.city = addressParts.pop() || '';
-  
+
         // Remaining parts form the addressLine1
         aptAddress.addressline1 = addressParts.join(', ');
-  
+
         // Format addressLine2 with the unit name
         aptAddress.addressline2 = selectedUnitName ? `Apt ${selectedUnitName}` : '';
 
         // Zipcode already exist
         aptAddress.zipcode = zipcode; // Zipcode (optional)
-  
+
         // Dispatch the updateUserProfile action with the parsed address
         const updateAddressAction = await dispatch(
           updateUserProfile({
@@ -161,7 +159,7 @@ const SubToAPT = () => {
             ...aptAddress,
           })
         );
-  
+
         Alert.alert('Success', 'You have successfully subscribed to the unit.');
         navigation.navigate('Zippora/ZipporaHome');
       } catch (error) {
@@ -183,7 +181,8 @@ const SubToAPT = () => {
       <TextInput
         style={[
           styles.zipcodeInput,
-          zipcode.length === 5 && aptList && styles.errorInput,
+          zipcode.length === 5 && aptList.length === 0 && styles.errorInput, // Red border for invalid zipcode
+          zipcode.length === 5 && aptList.length > 0 && styles.successInput, // Green border for valid zipcode with apartments
         ]}
         placeholder="Enter Zipcode"
         value={zipcode}
@@ -277,14 +276,17 @@ const styles = StyleSheet.create({
   },
   zipcodeInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ccc', // Default border color (gray)
     borderRadius: 5,
     padding: 10,
     marginBottom: 8,
     backgroundColor: '#f9f9f9',
   },
   errorInput: {
-    borderColor: 'red',
+    borderColor: 'red', // Red border for invalid zipcode
+  },
+  successInput: {
+    borderColor: 'green', // Green border for valid zipcode with apartments
   },
   errorText: {
     color: 'red',
