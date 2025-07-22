@@ -53,7 +53,6 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
       };
   
       const loginResponse = await dispatch(login(credentials));
-      console.log(loginResponse);
   
       if (login.fulfilled.match(loginResponse)) {
         const { accessToken } = loginResponse.payload;
@@ -99,7 +98,6 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
   
       if (latestAccessToken && memberId) {
         const resultAction = await dispatch(getUser(credentials));
-        console.log('ZipporaHome RET: ', resultAction);
   
         if (getUser.fulfilled.match(resultAction)) {
           console.log('User data fetched successfully');

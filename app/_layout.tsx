@@ -69,21 +69,15 @@ export default function RootLayout() {
   // Firebase setup for FCM token and notifications
   useEffect(() => {
     const setupFirebase = async () => {
-      console.log("Setting up Firebase...");
-
       try {
         // Request notification permissions
         const authStatus = await messaging().requestPermission();
         const enabled =
           authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-        console.log("Notification permission status:", enabled);
-
         if (enabled) {
           // Retrieve FCM token
           const token = await messaging().getToken();
-          console.log("FCM Token:", token);
 
           // Store the FCM token securely
           await SecureStore.setItemAsync('zipcodexpress-device-token', token);
@@ -135,9 +129,7 @@ export default function RootLayout() {
   if (!appReady) {
     return <View style={{ flex: 1, backgroundColor: "#ffffff" }} />;
   }
-  console.log("App Ready State:", appReady);
-  console.log("Fonts Loaded:", fontsLoaded);
-
+  
   return (
     <Provider store={store}>
       {/* <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}> */}

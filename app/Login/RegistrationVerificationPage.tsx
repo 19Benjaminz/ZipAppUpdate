@@ -42,10 +42,8 @@ const RegistrationVerificationPage = () => {
     ) {
       try {
         const resultAction = await dispatch(register(credentials));
-        console.log(resultAction);
         if (register.fulfilled.match(resultAction)) {
           const { ret, msg, data } = resultAction.payload;
-          console.log(ret);
   
           // Handle specific cases based on 'ret'
           switch (ret) {

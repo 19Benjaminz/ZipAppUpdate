@@ -27,8 +27,6 @@ const ZipporaInfo = () => {
 
   const unsubApartment = async (apartmentId: string) => {
     const response = await dispatch(unsubscribeApartment(apartmentId));
-    console.log("========================");
-    console.log("response:", response)
   };
 
   const handleUnsubscribe = (apartmentId: string) => {

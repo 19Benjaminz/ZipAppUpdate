@@ -147,15 +147,10 @@ export const updateUserProfile = createAsyncThunk(
         // Ensure required fields are added
         profileData._accessToken = accessToken;
         profileData._memberId = memberId;
-
-        console.log("++++++++++++++++++++++++++++++++++")
-        console.log(profileData)
         
         const response = await profileApi.updateProfile(profileData);
         const { ret, msg } = response;
-        console.log("response: ", response);
-        console.log(msg);
-  
+
         if (ret === 0) {
           console.log('Profile update successful:', msg);
           // Return only the submitted profile data
@@ -211,16 +206,12 @@ export const updateUserProfile = createAsyncThunk(
         // Ensure required fields are added
         profileData._accessToken = accessToken;
         profileData._memberId = memberId;
-
-        console.log("HOUSEHOLD MEMBER PROFILE DATA: ", profileData)
         
         const response = await profileApi.updateHouseholdMember(profileData);
         const { ret, msg } = response;
-        console.log("response: ", response);
-        console.log(msg);
   
         if (ret === 0) {
-          console.log('Profile update successful:', msg);
+          console.log('Household member update successful:', msg);
           // Return only the submitted profile data
           return profileData;
         } else {

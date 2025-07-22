@@ -24,7 +24,6 @@ const PersonalInformation: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const { profile, member, accessToken, memberId } = useAppSelector((state) => state.userInfo);
-  //console.log(profile);
 
   const [avatar, setAvatar] = useState(profile.avatar || '');
 
@@ -50,15 +49,10 @@ const PersonalInformation: React.FC = () => {
   const [isEditingHouseholdMember, setIsEditingHouseholdMember] = useState(false);
   const [isUpdatingLocally, setIsUpdatingLocally] = useState(false);
 
-  useEffect(() => {
-    console.log('houseHolderMember updated:', houseHolderMember);
-  }, [houseHolderMember]);
-
   const refreshData = useCallback(async () => {
     try {
       if (accessToken && memberId) {
         const response = await dispatch(getUser({ accessToken, memberId })).unwrap();
-        console.log('getUser response:', response);
       }
     } catch (error) {
       console.error('Error refreshing profile data:', error);
@@ -112,9 +106,6 @@ const PersonalInformation: React.FC = () => {
       quality: 1,
     });
 
-    console.log("..................")
-    console.log(result);
-  
     if (!result.canceled) {
       const uri = result.assets[0].uri;
       console.log(uri);
@@ -266,7 +257,6 @@ const PersonalInformation: React.FC = () => {
             })).unwrap(); // ✅ Extracts the result from Redux
 
             //Update local state AFTER Redux update
-            console.log("Add New HouseHolderMemebr: ", updatedValue)
             setHouseHolderMember(updatedValue);
             setNewMember('');
             setIsEditingHouseholdMember(false);
@@ -280,7 +270,6 @@ const PersonalInformation: React.FC = () => {
   };
 
   const handleDeleteMember = async (index: number) => {
-      console.log("HHM before deleting: ", houseHolderMember);
       const members = houseHolderMember.split(',').map(member => member.trim());
       if (index < 0 || index >= members.length) {
           console.warn('Invalid index for deletion:', index);
@@ -288,7 +277,6 @@ const PersonalInformation: React.FC = () => {
       }
       const updatedMembers = members.filter((_, i) => i !== index);
       const updatedValue = updatedMembers.join(', ');
-      console.log("New HouseHolderMemebr: ", updatedValue);
       try {
           setIsUpdatingLocally(true);
           const response = await dispatch(updateHouseholdMember({
@@ -296,7 +284,6 @@ const PersonalInformation: React.FC = () => {
               _memberId: memberId,       // Fix hardcoded value
               householderMember: updatedValue || ''
           })).unwrap();
-          console.log('Redux update response:', response);
           setHouseHolderMember(updatedValue);
           await refreshData();
           setIsUpdatingLocally(false);

@@ -95,7 +95,6 @@ const Register = () => {
     try {
       setLoading(true);
       const result = await dispatch(sendRegisterVcode(email)).unwrap();
-      console.log(result);
       setLoading(false);
     } catch (error) {
       console.error('Failed to send verification code:', error);

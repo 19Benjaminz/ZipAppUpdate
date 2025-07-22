@@ -32,7 +32,6 @@ const Login = () => {
   const { loading = false, error = null } = useAppSelector((state: RootState) => state.auth || {});
 
   const handleLogin = async () => {
-    console.log("clicking login");
     if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -45,15 +44,12 @@ const Login = () => {
       ...(deviceId && { deviceId }),
     };
 
-    console.log(credentials);
-
     try {
       const resultAction = await dispatch(login(credentials));
 
       if (login.fulfilled.match(resultAction)) {
         const { accessToken, memberId } = resultAction.payload;
         dispatch(setAccessToken(accessToken));
-        console.log(accessToken);
         dispatch(setMemberId(memberId));
 
         navigation.reset({
