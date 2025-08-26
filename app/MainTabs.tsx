@@ -87,9 +87,10 @@ export default function MainTabs() {
                         );
                         const { onPress, accessibilityState, ...rest } = props;
                         const isSelected = accessibilityState?.selected;
+                        const mergedStyle = [props.style, styles.tabButton, isAnyScreenLoading ? styles.disabledTab : null];
                         
                         return (
-                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={isAnyScreenLoading ? styles.disabledTab : {}}>
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={mergedStyle}>
                                 <Icon name="home" type="material" size={28} color={isSelected ? 'green' : 'gray'}/>
                             </TouchableOpacity>
                         )
@@ -127,9 +128,10 @@ export default function MainTabs() {
                         );
                         const { onPress, accessibilityState, ...rest } = props;
                         const isSelected = accessibilityState?.selected;
+                        const mergedStyle = [props.style, styles.tabButton, isAnyScreenLoading? styles.disabledTab : null];
 
                         return (
-                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={isAnyScreenLoading? styles.disabledTab : {}}>
+                            <TouchableOpacity {...cleanProps} disabled={isAnyScreenLoading} style={mergedStyle}>
                                 <Icon name="person" type="material" size={28} color={isSelected ? 'green' : 'gray'}/>
                             </TouchableOpacity>
                         )
@@ -174,5 +176,8 @@ const styles = StyleSheet.create({
     },
     disabledTab: {
         opacity: 0.5, // Dim the button when disabled
+    },
+    tabButton: {
+        paddingTop: 6, // light extra gap from top of tab bar
     },
 });

@@ -491,6 +491,8 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   avatarContainer: {
     width: 120,

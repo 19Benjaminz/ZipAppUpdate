@@ -210,6 +210,7 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
 
   return (
     <ScrollView
+      style={styles.scroll}
       contentContainerStyle={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -287,9 +288,15 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
 };
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: '#F5F5F5', // ensure background fills full viewport
+  },
   container: {
     padding: 16,
     backgroundColor: '#F5F5F5',
+    flexGrow: 1, // expand to fill remaining space when content is short
+    paddingBottom: 120, // leave space above bottom nav + camera FAB
   },
   loadingContainer: {
     flex: 1,
