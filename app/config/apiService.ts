@@ -13,6 +13,7 @@ export const authApi = {
         payload.append('psd', credentials.password); 
         if (credentials.deviceId) payload.append('deviceId', credentials.deviceId);
         // Make the API call with FormData
+        console.log(payload)
         return apiClient.post(API_ENDPOINTS.LOGIN.LOGIN, payload, {
             headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
         });

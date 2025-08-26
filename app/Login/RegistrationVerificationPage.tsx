@@ -42,23 +42,27 @@ const RegistrationVerificationPage = () => {
     ) {
       try {
         const resultAction = await dispatch(register(credentials));
+        console.log("Registration result:", resultAction); 
         if (register.fulfilled.match(resultAction)) {
-          const { ret, msg, data } = resultAction.payload;
+          const payload = resultAction.payload;
+          console.log("Registration response payload:", payload);
   
-          // Handle specific cases based on 'ret'
-          switch (ret) {
+          // Handle specific cases based on payload (which is the error code)
+          switch (payload) {
             case 0: // Registration success
                 console.log("Registration successful!");
 
-                dispatch(setAccessToken(data.accessToken));
-                dispatch(setMemberId(data.memberId));
+                // You'll need to get the actual data from the response
+                // dispatch(setAccessToken(data.accessToken));
+                // dispatch(setMemberId(data.memberId));
 
+                Alert.alert("Success", "Registration successful!");
                 setTimeout(() => {
                   navigation.reset({
                     index: 0,
-                    routes: [{ name: 'Zippora/ZipporaHome' }],
+                    routes: [{ name: 'Login/Login' }], // Navigate to login instead
                   });
-                }, 0);
+                }, 1000);
               break;
             case 3: // Email already registered
               console.error("Error: Email has been registered.");
@@ -76,8 +80,8 @@ const RegistrationVerificationPage = () => {
               navigation.goBack();
               break;
             default:
-              console.error("Unhandled case:", msg);
-              Alert.alert("Error", msg || "Unexpected error occurred.");
+              console.error("Unhandled case. Payload:", payload);
+              Alert.alert("Error", "Unexpected error occurred.");
           }
         }
       } catch (error) {
