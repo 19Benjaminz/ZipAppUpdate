@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../components/types';
@@ -29,7 +41,7 @@ const RegistrationVerificationPage = () => {
       psd1: psd1,
       psd2: psd2,
     };
-  
+
     if (
       phoneNum &&
       email &&
@@ -42,27 +54,22 @@ const RegistrationVerificationPage = () => {
     ) {
       try {
         const resultAction = await dispatch(register(credentials));
-        console.log("Registration result:", resultAction); 
+        console.log("Registration result:", resultAction);
         if (register.fulfilled.match(resultAction)) {
           const payload = resultAction.payload;
           console.log("Registration response payload:", payload);
-  
+
           // Handle specific cases based on payload (which is the error code)
           switch (payload) {
             case 0: // Registration success
-                console.log("Registration successful!");
-
-                // You'll need to get the actual data from the response
-                // dispatch(setAccessToken(data.accessToken));
-                // dispatch(setMemberId(data.memberId));
-
-                Alert.alert("Success", "Registration successful!");
-                setTimeout(() => {
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Login/Login' }], // Navigate to login instead
-                  });
-                }, 1000);
+              console.log("Registration successful!");
+              Alert.alert("Success", "Registration successful!");
+              setTimeout(() => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login/Login' }],
+                });
+              }, 1000);
               break;
             case 3: // Email already registered
               console.error("Error: Email has been registered.");
@@ -107,35 +114,57 @@ const RegistrationVerificationPage = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Verify Your Email</Text>
-      <Text style={styles.details}>
-        Please enter the verification code sent to your email: {email}
-      </Text>
-      {phoneNum && <Text style={styles.details}>Phone Number: {phoneNum}</Text>}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <Text style={styles.header}>Verify Your Email</Text>
+            <Text style={styles.details}>
+              Please enter the verification code sent to your email: {email}
+            </Text>
+            {phoneNum && <Text style={styles.details}>Phone Number: {phoneNum}</Text>}
 
-      {/* Verification Code Input */}
-      <TextInput
-        style={[
-          styles.input,
-          inputError ? { borderColor: 'red', backgroundColor: '#ffe6e6' } : {},
-        ]}
-        placeholder="Enter Verification Code"
-        placeholderTextColor="gray"
-        keyboardType="numeric"
-        value={verificationCode}
-        onChangeText={setVerificationCode}
-      />
-      {inputError && <Text style={styles.errorText}>{errorMessage}</Text>}
+            <TextInput
+              style={[
+                styles.input,
+                inputError ? { borderColor: 'red', backgroundColor: '#ffe6e6' } : {},
+              ]}
+              placeholder="Enter Verification Code"
+              placeholderTextColor="gray"
+              keyboardType="numeric"
+              value={verificationCode}
+              onChangeText={text => setVerificationCode(text.trim())}
+              returnKeyType="done"
+              onSubmitEditing={handleRegister}
+              blurOnSubmit
+            />
+            {inputError && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-      <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-        <Text style={styles.registerButtonText}>Submit</Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+              <Text style={styles.registerButtonText}>Submit</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
   container: {
     flex: 1,
     padding: 16,

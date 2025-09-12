@@ -18,11 +18,9 @@ const initialState: AuthState = {
 export const login = createAsyncThunk(
     'auth/login',
     async (credentials: { email?: string; phoneNum?: string; userid?: string; password: string; deviceId?: string }, thunkAPI) => {
-        console.log(credentials);
         try {
             const response = await authApi.login(credentials);
             const { ret, data, msg } = response.data;
-            console.log(ret);
             console.log(msg)
 
             if (ret === 0) {

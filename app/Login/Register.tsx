@@ -15,6 +15,7 @@ import { RootStackParamList } from '../../components/types';
 import { useAppDispatch } from '../store';
 import { sendRegisterVcode } from '../features/authSlice';
 import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
+import LoadingOverlay from '@/components/LoadingOverlay';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -69,35 +70,35 @@ const Register = () => {
 
   const handleSignUp = async () => {
     console.log('Registering with email...');
-    if (email) {
+    if (!email) return;
+    try {
       await sendVcodeAction();
+      const standardizedFirstName = capitalizeFirstLetter(firstName);
+      const standardizedLastName = capitalizeFirstLetter(lastName);
+      const formattedPhone = formatPhoneNumber(phoneNum);
+      setFirstName(standardizedFirstName);
+      setLastName(standardizedLastName);
+      setPhoneNum(formattedPhone);
+      navigation.navigate('Login/RegistrationVerificationPage', {
+        email,
+        phoneNum,
+        firstName,
+        lastName,
+        psd1: password,
+        psd2: confirmPassword,
+      });
+    } finally {
+      setLoading(false);
     }
-
-    const standardizedFirstName = capitalizeFirstLetter(firstName);
-    const standardizedLastName = capitalizeFirstLetter(lastName);
-    const formattedPhone = formatPhoneNumber(phoneNum);
-
-    setFirstName(standardizedFirstName);
-    setLastName(standardizedLastName);
-    setPhoneNum(formattedPhone);
-
-    navigation.navigate('Login/RegistrationVerificationPage', {
-      email,
-      phoneNum,
-      firstName,
-      lastName,
-      psd1: password,
-      psd2: confirmPassword,
-    });
   };
 
   const sendVcodeAction = async () => {
     try {
       setLoading(true);
       const result = await dispatch(sendRegisterVcode(email)).unwrap();
-      setLoading(false);
     } catch (error) {
       console.error('Failed to send verification code:', error);
+      setLoading(false);
     }
   };
 
@@ -269,6 +270,7 @@ const Register = () => {
           </ZIPText>
         </TouchableOpacity>
       </KeyboardAwareScrollView>
+      <LoadingOverlay visible={loading} />
     </View>
   );
 };

@@ -13,6 +13,7 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  useColorScheme,
 } from 'react-native';
 import { md5Hash } from '../Actions/ToMD5';
 import { useNavigation } from '@react-navigation/native';
@@ -30,6 +31,12 @@ const Login = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const dispatch = useAppDispatch();
   const { loading = false, error = null } = useAppSelector((state: RootState) => state.auth || {});
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const placeholderColor = isDark ? '#9CA3AF' : '#888';
+  const inputTextColor = isDark ? '#111' : '#111'; // keep same dark text color for consistency on light bg
+  const borderColor = isDark ? '#555' : 'gray';
+  const bgColor = 'white'; // always keep light background, ignore dark mode for page background
 
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
@@ -86,13 +93,13 @@ const Login = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: bgColor }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
-          <StatusBar barStyle="dark-content" />
+          <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
           <Image
             source={require('../../assets/images/zipLogo.png')}
@@ -103,6 +110,7 @@ const Login = () => {
           <View style={styles.formContainer}>
             <TextInput
               placeholder="Email"
+              placeholderTextColor={placeholderColor}
               value={formData.email}
               onChangeText={(text) => {
                 setFormData((prev) => ({ ...prev, email: text }));
@@ -113,7 +121,7 @@ const Login = () => {
                   setFormData((prev) => ({ ...prev, email: text }));
                 }, 0);
               }}
-              style={styles.input}
+              style={[styles.input, { borderColor, color: inputTextColor }]}
               keyboardType="email-address"
               textContentType="username"
               autoComplete="username"
@@ -124,9 +132,10 @@ const Login = () => {
 
             <TextInput
               placeholder="Password"
+              placeholderTextColor={placeholderColor}
               secureTextEntry
               onChangeText={(text) => setFormData({ ...formData, password: text })}
-              style={styles.input}
+              style={[styles.input, { borderColor, color: inputTextColor }]}
               textContentType="password"
               autoComplete="password"
               value={formData.password}
@@ -134,7 +143,9 @@ const Login = () => {
               onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
             />
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && formData.email && formData.password && (
+              <Text style={styles.errorText}>{error}</Text>
+            )}
 
             <TouchableOpacity
               style={[styles.loginButton, loading && styles.disabledButton]}

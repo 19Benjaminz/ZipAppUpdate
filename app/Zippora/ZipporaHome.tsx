@@ -31,7 +31,6 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
   const [loading, setLoading] = useState(true);
   const [isReloggingIn, setIsReloggingIn] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
-  const [launchCount, setLaunchCount] = useState(0);
 
   const handleReLogin = async () => {
     if (isReloggingIn) return; // Prevent multiple re-login attempts
@@ -168,25 +167,7 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
   );
 
   useEffect(() => {
-    const trackAppLaunches = async () => {
-      try {
-        const count = await AsyncStorage.getItem("appLaunchCount");
-        let newCount = count ? parseInt(count) + 1 : 1;
-        await AsyncStorage.setItem("appLaunchCount", newCount.toString());
-        setLaunchCount(newCount);
-        console.log("Launch Count: ", newCount);
-
-        // Show the rating prompt after 5 launches
-        if (newCount >= 5 && newCount % 5 === 0) {
-          requestReview();
-          await AsyncStorage.setItem("appLaunchCount", '0');
-        }
-      } catch (error) {
-        console.error("Error tracking app launches:", error);
-      }
-    };
-
-    trackAppLaunches();
+    // Removed app launch counting; counting now occurs per successful QR scan.
   }, []);
   
   

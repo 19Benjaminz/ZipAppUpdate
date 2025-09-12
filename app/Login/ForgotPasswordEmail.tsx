@@ -15,11 +15,13 @@ import { useAppDispatch } from '../store';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '@/components/types';
 import { sendForgotPasswordVcode } from '../features/authSlice';
+import LoadingOverlay from '@/components/LoadingOverlay';
 
 const ForgotPasswordEmail: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleGetCode = async () => {
     if (!email) {
@@ -28,9 +30,10 @@ const ForgotPasswordEmail: React.FC = () => {
     }
 
     try {
+      setLoading(true);
       // Simulate API request to send verification code
       const data = await dispatch(sendForgotPasswordVcode(email));
-      const memberId = data.payload.memberId;
+      const memberId = (data as any).payload?.memberId;
       console.log('Sending verification code to email:', email);
       Alert.alert('Success', 'Verification code sent to your email.');
       if (memberId) {
@@ -39,6 +42,8 @@ const ForgotPasswordEmail: React.FC = () => {
     } catch (error) {
       console.error('Error sending verification code:', error);
       Alert.alert('Error', 'Failed to send verification code. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,6 +78,7 @@ const ForgotPasswordEmail: React.FC = () => {
           </TouchableOpacity>
         </View>
       </TouchableWithoutFeedback>
+      <LoadingOverlay visible={loading} />
     </KeyboardAvoidingView>
   );
 };

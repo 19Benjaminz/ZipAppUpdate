@@ -9,6 +9,8 @@ import { scanQRCode } from "../features/zipporaInfoSlice";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as StoreReview from 'expo-store-review';
 
 // Define navigation type
 type BarcodeScanNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Zippora/BarcodeScan'>;
@@ -53,6 +55,19 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
     setScanned(true);
     try {
       const response = await dispatch(scanQRCode(data));
+      // Increment scan count for rating prompt
+      try {
+        const countStr = await AsyncStorage.getItem('scanSuccessCount');
+        const newCount = countStr ? parseInt(countStr) + 1 : 1;
+        await AsyncStorage.setItem('scanSuccessCount', newCount.toString());
+        console.log('Scan Success Count:', newCount);
+        if (newCount >= 2 && newCount % 2 === 0 && (await StoreReview.hasAction())) {
+          await StoreReview.requestReview();
+          await AsyncStorage.setItem('scanSuccessCount', '0');
+        }
+      } catch (e) {
+        console.error('Error updating scan count', e);
+      }
     } catch (error) {
       console.error('Error Scaning qr Code', error);
       Alert.alert('Error', 'Failed to Scan QR code');
