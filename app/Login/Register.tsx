@@ -48,9 +48,15 @@ const Register = () => {
   };
 
   const handlePasswordValidation = () => {
-    if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match.');
+    // Only validate if both fields have a value
+    if (password && confirmPassword) {
+      if (password !== confirmPassword) {
+        setPasswordError('Passwords do not match.');
+      } else {
+        setPasswordError('');
+      }
     } else {
+      // Do not show an error while one field is still empty
       setPasswordError('');
     }
   };
@@ -70,6 +76,11 @@ const Register = () => {
 
   const handleSignUp = async () => {
     console.log('Registering with email...');
+    // Final password match check before proceeding
+    if (password && confirmPassword && password !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      return; // Stop submission
+    }
     if (!email) return;
     try {
       await sendVcodeAction();
@@ -184,7 +195,10 @@ const Register = () => {
           value={password}
           onChangeText={(text) => {
             setPassword(text);
-            if (passwordError) handlePasswordValidation();
+            // Do not immediately set error; only clear existing if now matches
+            if (passwordError && confirmPassword && text === confirmPassword) {
+              setPasswordError('');
+            }
           }}
           onEndEditing={handlePasswordValidation}
           textContentType="none"
@@ -203,12 +217,14 @@ const Register = () => {
           value={confirmPassword}
           onChangeText={(text) => {
             setConfirmPassword(text);
-            if (passwordError) handlePasswordValidation();
+            if (passwordError && password && text === password) {
+              setPasswordError('');
+            }
           }}
           onEndEditing={handlePasswordValidation}
           textContentType="none"
           autoComplete="off"
-          isError={!!passwordError} // Highlight Confirm Password field if passwords don't match
+          isError={!!passwordError}
         />
         {passwordError ? (
           <Text style={{ color: 'red', marginTop: 4 }}>{passwordError}</Text>

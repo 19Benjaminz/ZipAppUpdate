@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "ZipcodeXpress",
-    "slug": "ZipcodeXpress",
-    "version": "2.0.2",
+    "slug": "ZipAppTwo",
+    "version": "2.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/zipcodexpress_square.png",
     "scheme": "myapp",
@@ -10,7 +10,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.unibox.express",
-      "buildNumber": "2.0.21",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
