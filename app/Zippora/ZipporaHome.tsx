@@ -94,6 +94,7 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
         accessToken: latestAccessToken || '',
         memberId: memberId || '',
       };
+      console.log('Fetching user data with credentials:', credentials);
   
       if (latestAccessToken && memberId) {
         const resultAction = await dispatch(getUser(credentials));

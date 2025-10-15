@@ -4,6 +4,7 @@ import authReducer from '../features/authSlice'; // Ensure this path is correct
 import userInfoReducer from "../features/userInfoSlice";
 import zipporaReducer from "../features/zipporaInfoSlice"
 import apartmentReducer from "../features/apartmentSlice"
+import walletReducer from "../features/walletSlice";
 
 export const store = configureStore({
     reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
         userInfo: userInfoReducer,
         zipporaInfo: zipporaReducer,
         apartment: apartmentReducer,
+        wallet: walletReducer,
     },
 });
 

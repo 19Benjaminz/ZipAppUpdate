@@ -2,7 +2,7 @@
   "expo": {
     "name": "ZipcodeXpress",
     "slug": "ZipAppTwo",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/zipcodexpress_square.png",
     "scheme": "myapp",
@@ -16,16 +16,22 @@
         },
         "ITSAppUsesNonExemptEncryption": false
       },
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "package": "com.zipcodexpress1",
       "versionCode": 52,
       "permissions": [
         "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -44,11 +50,15 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
+      "react-native-braintree-dropin-ui",
       [
         "expo-build-properties",
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "minSdkVersion": 21
           }
         }
       ],
@@ -78,6 +88,9 @@
       "eas": {
         "projectId": "d5c4de98-003a-4393-9380-db9d958ed8e2"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d5c4de98-003a-4393-9380-db9d958ed8e2"
     }
   }
 }

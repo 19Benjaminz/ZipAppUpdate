@@ -80,6 +80,11 @@ const Profile: React.FC<{ setProfileLoading: (loading: boolean) => void }> = ({ 
                 title: 'Subscribe to New Apartment',
                 icon: require('../../assets/images/apartment.png'),
                 screen: 'Zippora/SubToAPT' as keyof RootStackParamList,
+            },
+            {
+                title: 'Wallet',
+                icon: require('../../assets/images/wallet.png'),
+                screen: 'Profile/Wallet' as keyof RootStackParamList,
             }
         ];
 

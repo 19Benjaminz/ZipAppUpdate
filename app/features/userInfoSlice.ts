@@ -77,6 +77,7 @@ export const getUser = createAsyncThunk(
     try {
       const response = await profileApi.getMemberInfo(credentials);
       const { ret, data, msg } = response;
+      console.log(data);
 
       if (ret === 0) {
         return {
