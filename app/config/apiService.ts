@@ -334,3 +334,158 @@ export const zipporaApi = {
           }
     }
 };
+
+// Wallet API Calls
+export const walletApi = {
+    getWallet: async (credentials: { accessToken: string; memberId: string }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', credentials.accessToken);
+        payload.append('_memberId', credentials.memberId);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.GET_WALLET, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    getCreditCardList: async (credentials: { accessToken: string; memberId: string }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', credentials.accessToken);
+        payload.append('_memberId', credentials.memberId);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.GET_CREDIT_CARD_LIST, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    getStatementList: async (credentials: { accessToken: string; memberId: string; type?: string }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', credentials.accessToken);
+        payload.append('_memberId', credentials.memberId);
+        if (credentials.type) payload.append('type', credentials.type);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.GET_STATEMENT_LIST, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    getTransactionList: async (credentials: { accessToken: string; memberId: string; type?: string }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', credentials.accessToken);
+        payload.append('_memberId', credentials.memberId);
+        if (credentials.type) payload.append('type', credentials.type);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.GET_TRANSACTION_LIST, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    getRechargeConfig: async (credentials: { accessToken: string; memberId: string }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', credentials.accessToken);
+        payload.append('_memberId', credentials.memberId);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.GET_RECHARGE_CONFIG, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    rechargeWithCreditCard: async (data: { 
+        accessToken: string; 
+        memberId: string; 
+        amount: number; 
+        cardId: string; 
+    }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', data.accessToken);
+        payload.append('_memberId', data.memberId);
+        payload.append('amount', data.amount.toString());
+        payload.append('cardId', data.cardId);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.PAY_CREDIT_CARD, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    insertCreditCard: async (data: {
+        accessToken: string;
+        memberId: string;
+        cardNum: string;          // 16-digit card number
+        cardHolderName: string;   // Cardholder name
+        expDate: string;          // 4-digit format: MMYY (e.g., "1020" for Oct 2020)
+        cvv2: string;             // 3-digit CVV
+        zipcode: string;          // 5-digit zipcode
+        isDefault?: string;       // Optional: whether to set as default card
+    }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', data.accessToken);
+        payload.append('_memberId', data.memberId);
+        payload.append('cardNum', data.cardNum);
+        payload.append('cardHolderName', data.cardHolderName);
+        payload.append('expDate', data.expDate);
+        payload.append('cvv2', data.cvv2);
+        payload.append('zipcode', data.zipcode);
+        if (data.isDefault) payload.append('isDefault', data.isDefault);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.INSERT_CREDIT_CARD, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        console.log('Insert Credit Card Response:', response.data);
+        return response.data;
+    },
+
+    deleteCreditCard: async (data: {
+        accessToken: string;
+        memberId: string;
+        cardId: string;
+    }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', data.accessToken);
+        payload.append('_memberId', data.memberId);
+        payload.append('cardId', data.cardId);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.DELETE_CREDIT_CARD, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    setDefaultCard: async (data: {
+        accessToken: string;
+        memberId: string;
+        cardId: string;
+    }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', data.accessToken);
+        payload.append('_memberId', data.memberId);
+        payload.append('cardId', data.cardId);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.SET_DEFAULT_CARD, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    rechargeWithPayPal: async (data: {
+        accessToken: string;
+        memberId: string;
+        amount: number;
+        paymentMethodNonce: string;
+    }) => {
+        const payload = new FormData();
+        payload.append('_accessToken', data.accessToken);
+        payload.append('_memberId', data.memberId);
+        payload.append('amount', data.amount.toString());
+        payload.append('payment_method_nonce', data.paymentMethodNonce);
+        
+        const response = await apiClient.post(API_ENDPOINTS.WALLET.PAY_PAYPAL, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+};

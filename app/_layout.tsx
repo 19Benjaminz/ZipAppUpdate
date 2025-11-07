@@ -18,6 +18,7 @@ import ModifyPassword from './Profile/ModifyPassword';
 import SubToAPT from './Zippora/SubToAPT';
 import ZipporaInfo from './Zippora/ZipporaInfo';
 import ZipLogs from './Zippora/ZipLogs';
+import { Wallet, Recharge, Statement, TransactionHistory, CreditCards } from './Profile/Wallet';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import messaging from '@react-native-firebase/messaging';
 import * as SecureStore from 'expo-secure-store';
@@ -184,6 +185,31 @@ export default function RootLayout() {
             name="Profile/ModifyPassword"
             component={ModifyPassword}
             options={{ title: 'Modify Password', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/Wallet/Wallet"
+            component={Wallet}
+            options={{ title: 'My Wallet', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/Wallet/Recharge"
+            component={Recharge}
+            options={{ title: 'Recharge', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/Wallet/Statement"
+            component={Statement}
+            options={{ title: 'Statement', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/Wallet/TransactionHistory"
+            component={TransactionHistory}
+            options={{ title: 'Transaction History', headerShown: true }}
+          />
+          <Stack.Screen
+            name="Profile/Wallet/CreditCards"
+            component={CreditCards}
+            options={{ title: 'Credit Cards', headerShown: true }}
           />
           <Stack.Screen
             name="Zippora/SubToAPT"

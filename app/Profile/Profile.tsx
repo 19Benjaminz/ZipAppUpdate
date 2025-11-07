@@ -67,6 +67,11 @@ const Profile: React.FC<{ setProfileLoading: (loading: boolean) => void }> = ({ 
     const renderProfileItems = () => {
         const items = [
             {
+                title: 'My Wallet',
+                icon: require('../../assets/images/wallet.png'),
+                screen: 'Profile/Wallet/Wallet' as keyof RootStackParamList,
+            },
+            {
                 title: 'About Us',
                 icon: require('../../assets/images/aboutus.png'),
                 screen: 'Profile/AboutUs' as keyof RootStackParamList,

@@ -70,6 +70,7 @@ export const QRCODELL_QRCODE= 'QrCode/scan';
 export const GET_RECHARGE_CONFIG = 'wallet/getRechargeAmountConfig';
 export const PAY_WITH_CREDIT_CARD = 'wallet/recharge';
 export const PAY_WITH_PAYPAL = 'paypal/checkout';
+export const GET_WALLET = 'wallet/getWallet';
 
 //Zippora
 //getApartmentList

@@ -63,9 +63,16 @@ export const API_ENDPOINTS = {
       SCAN: 'QrCode/scan',
     },
     WALLET: {
+      GET_WALLET: 'wallet/getWallet',
       GET_RECHARGE_CONFIG: 'wallet/getRechargeAmountConfig',
       PAY_CREDIT_CARD: 'wallet/recharge',
       PAY_PAYPAL: 'paypal/checkout',
+      GET_CREDIT_CARD_LIST: 'CardCredit/getCardCreditList',
+      INSERT_CREDIT_CARD: 'CardCredit/insertCardCredit',
+      DELETE_CREDIT_CARD: 'CardCredit/delete',
+      SET_DEFAULT_CARD: 'CardCredit/setDefault',
+      GET_STATEMENT_LIST: 'statement/getStatementList',
+      GET_TRANSACTION_LIST: 'transaction/getTransactionList',
     },
     ZIP: {
       GET_APT_LIST: 'zippora/getApartmentList',
