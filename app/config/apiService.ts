@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import { API_ENDPOINTS } from './endpoints';
 import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
+import { zipporaCacheService, logsCacheService, userCacheService, apartmentCacheService } from '../database/services';
 
 // Example: Authentication API Calls
 export const authApi = {
@@ -74,7 +75,20 @@ export const authApi = {
 
 // Example: Profile API Calls
 export const profileApi = {
-    getMemberInfo: async (credentials: { accessToken: string; memberId: string; }, needLogin = true) => {
+    getMemberInfo: async (credentials: { accessToken: string; memberId: string; }, needLogin = true, useCache: boolean = true) => {
+        // Try to get from cache first
+        if (useCache && needLogin) {
+          try {
+            const cachedData = userCacheService.getUserCache(credentials.memberId);
+            if (cachedData) {
+              console.log('Returning member info from cache');
+              return cachedData.userData;
+            }
+          } catch (cacheError) {
+            console.warn('Error reading from cache:', cacheError);
+          }
+        }
+
         let requestURL = API_ENDPOINTS.PROFILE.GET_MEMBER;
     
         if (needLogin) {
@@ -87,6 +101,16 @@ export const profileApi = {
     
         try {
             const response = await apiClient.get(requestURL);
+            
+            // Save to cache if login is required
+            if (needLogin && response.data) {
+              try {
+                userCacheService.saveUserCache(credentials.memberId, credentials.accessToken, response.data);
+              } catch (cacheError) {
+                console.warn('Error saving to cache:', cacheError);
+              }
+            }
+            
             return response.data; // Assume the response structure matches expectations
         } catch (error: any) {
             console.error('Error fetching member information:', error.message);
@@ -238,7 +262,20 @@ export const apartmentApi = {
 };
 
 export const zipporaApi = {
-    getZipporaList: async (credentials: { accessToken: string; memberId: string }) => {
+    getZipporaList: async (credentials: { accessToken: string; memberId: string }, useCache: boolean = true) => {
+        // Try to get from cache first
+        if (useCache) {
+          try {
+            const cachedData = zipporaCacheService.getZipporaCache(credentials.memberId);
+            if (cachedData) {
+              console.log('Returning Zippora list from cache');
+              return cachedData.zipporaList;
+            }
+          } catch (cacheError) {
+            console.warn('Error reading from cache:', cacheError);
+          }
+        }
+
         const params = new URLSearchParams();
         params.append('_accessToken', credentials.accessToken);
         params.append('_memberId', credentials.memberId);
@@ -248,6 +285,12 @@ export const zipporaApi = {
           const response = await apiClient.get(requestURL);
     
           if (response.data.ret === 0) {
+            // Save to cache
+            try {
+              zipporaCacheService.saveZipporaCache(credentials.memberId, response.data);
+            } catch (cacheError) {
+              console.warn('Error saving to cache:', cacheError);
+            }
             return response.data; // Successful response
           } else {
             throw new Error(response.data.msg || 'Failed to fetch Zippora list');
@@ -257,7 +300,20 @@ export const zipporaApi = {
           throw error;
         }
     },
-    getZipporaLogs: async (credentials: { accessToken: string; memberId: string }) => {
+    getZipporaLogs: async (credentials: { accessToken: string; memberId: string }, useCache: boolean = true) => {
+        // Try to get from cache first
+        if (useCache) {
+          try {
+            const cachedData = logsCacheService.getLogsCache(credentials.memberId);
+            if (cachedData) {
+              console.log('Returning Zippora logs from cache');
+              return cachedData.logsData;
+            }
+          } catch (cacheError) {
+            console.warn('Error reading from cache:', cacheError);
+          }
+        }
+
         const params = new URLSearchParams();
         params.append('_accessToken', credentials.accessToken);
         params.append('_memberId', credentials.memberId);
@@ -267,6 +323,12 @@ export const zipporaApi = {
           const response = await apiClient.get(requestURL);
     
           if (response.data.ret === 0) {
+            // Save to cache
+            try {
+              logsCacheService.saveLogsCache(credentials.memberId, response.data);
+            } catch (cacheError) {
+              console.warn('Error saving to cache:', cacheError);
+            }
             return response.data; // Successful response
           } else {
             throw new Error(response.data.msg || 'Failed to fetch ZIPPORA LOGS');

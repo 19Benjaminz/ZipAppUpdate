@@ -23,6 +23,7 @@ import messaging from '@react-native-firebase/messaging';
 import * as SecureStore from 'expo-secure-store';
 import { Alert, View } from 'react-native';
 import * as Notifications from "expo-notifications";
+import { initializeDatabase } from './database';
 
 const Stack = createNativeStackNavigator();
 
@@ -49,6 +50,14 @@ export default function RootLayout() {
         //await SplashScreen.preventAutoHideAsync(); 
         // Wait for fonts to load
         if (!fontsLoaded) return;
+
+        // Initialize SQLite database
+        try {
+          initializeDatabase();
+          console.log('Database initialized successfully');
+        } catch (dbError) {
+          console.error('Error initializing database:', dbError);
+        }
 
         // Simulate additional app setup (e.g., Firebase, API calls)
         await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay

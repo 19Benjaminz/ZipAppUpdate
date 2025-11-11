@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../config/apiService'; // Adjust the import path based on your project structure
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { clearAllCaches } from '../database/services';
 
 export interface AuthState {
     loading: boolean;
@@ -192,6 +193,16 @@ const authSlice = createSlice({
                 SecureStore.deleteItemAsync("accessToken");
                 SecureStore.deleteItemAsync("memberId");
                 AsyncStorage.removeItem("appLaunchCount");
+                
+                // Clear all database caches for the user
+                try {
+                  const state: any = action.meta.arg;
+                  if (state && state.memberId) {
+                    clearAllCaches(state.memberId);
+                  }
+                } catch (error) {
+                  console.warn('Error clearing database caches:', error);
+                }
             })
             .addCase(logout.rejected, (state, action) => {
                 state.loading = false;
