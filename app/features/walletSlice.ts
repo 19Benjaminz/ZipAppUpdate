@@ -83,7 +83,7 @@ interface WalletState {
   rechargeConfigLoading: boolean;
   rechargeConfigError: string | null;
   selectedRechargeIndex: number;
-  selectedPaymentMethod: 'credit' | 'paypal';
+  selectedPaymentMethod: 'credit' | 'stripe';
 }
 
 const initialState: WalletState = {
@@ -251,16 +251,18 @@ export const rechargeWithPayPal = createAsyncThunk(
     },
     thunkAPI
   ) => {
+    console.log('Initiating PayPal recharge with data:', data);
     try {
-      const response = await walletApi.rechargeWithPayPal(data);
+      const response = await walletApi.payWithPayPal(data);
       const { ret, msg } = response;
-      
+      console.log('PayPal Recharge API Call Return Value:', ret)
+      console.log('PayPal Recharge API Call Message:', msg)
+
       if (ret === 0) {
         // Refresh wallet balance after successful recharge
-        thunkAPI.dispatch(getWalletBalance({ 
-          accessToken: data.accessToken, 
-          memberId: data.memberId 
-        }));
+        thunkAPI.dispatch(
+          getWalletBalance({ accessToken: data.accessToken, memberId: data.memberId })
+        );
         return { success: true, message: msg || 'PayPal recharge successful' };
       } else {
         return thunkAPI.rejectWithValue(msg || 'PayPal recharge failed');
@@ -376,7 +378,7 @@ const walletSlice = createSlice({
     setSelectedRechargeIndex: (state, action: PayloadAction<number>) => {
       state.selectedRechargeIndex = action.payload;
     },
-    setSelectedPaymentMethod: (state, action: PayloadAction<'credit' | 'paypal'>) => {
+    setSelectedPaymentMethod: (state, action: PayloadAction<'credit' | 'stripe'>) => {
       state.selectedPaymentMethod = action.payload;
     },
     

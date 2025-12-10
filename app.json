@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "ZipcodeXpress",
-    "slug": "ZipcodeXpress",
-    "version": "2.0.2",
+    "slug": "ZipAppTwo",
+    "version": "2.0.7",
     "orientation": "portrait",
     "icon": "./assets/images/zipcodexpress_square.png",
     "scheme": "myapp",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.unibox.express",
-      "buildNumber": "2.0.21",
+      "buildNumber": "2.0.38",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -51,7 +51,6 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
-      "react-native-braintree-dropin-ui",
       [
         "expo-build-properties",
         {

@@ -471,21 +471,22 @@ export const walletApi = {
         return response.data;
     },
 
-    rechargeWithPayPal: async (data: {
+    payWithPayPal: async (data: {
         accessToken: string;
         memberId: string;
         amount: number;
         paymentMethodNonce: string;
     }) => {
-        const payload = new FormData();
-        payload.append('_accessToken', data.accessToken);
-        payload.append('_memberId', data.memberId);
-        payload.append('amount', data.amount.toString());
-        payload.append('payment_method_nonce', data.paymentMethodNonce);
-        
-        const response = await apiClient.post(API_ENDPOINTS.WALLET.PAY_PAYPAL, payload, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        console.log('PayPal payment initiated with nonce:', data.paymentMethodNonce);
+        console.log('Amount In SLICE:', data.amount); 
+        const params = new URLSearchParams();
+        params.append('_accessToken', data.accessToken);
+        params.append('_memberId', data.memberId);
+        params.append('payment_method_nonce', data.paymentMethodNonce);
+        params.append('amount', data.amount.toString());
+
+        const url = `paypal/checkout?${params.toString()}`;
+        const response = await apiClient.get(url);
         return response.data;
     },
 };

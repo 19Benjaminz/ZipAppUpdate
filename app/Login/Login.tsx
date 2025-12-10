@@ -14,6 +14,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   useColorScheme,
+  ScrollView,
 } from 'react-native';
 import { md5Hash } from '../Actions/ToMD5';
 import { useNavigation } from '@react-navigation/native';
@@ -112,35 +113,28 @@ const Login = () => {
               placeholder="Email"
               placeholderTextColor={placeholderColor}
               value={formData.email}
-              onChangeText={(text) => {
-                setFormData((prev) => ({ ...prev, email: text }));
-              }}
-              onEndEditing={(e) => {
-                const text = e.nativeEvent.text;
-                setTimeout(() => {
-                  setFormData((prev) => ({ ...prev, email: text }));
-                }, 0);
-              }}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
               style={[styles.input, { borderColor, color: inputTextColor }]}
               keyboardType="email-address"
               textContentType="username"
               autoComplete="username"
+              autoCorrect={false}
               autoCapitalize="none"
-              returnKeyType="done" // Add Done button
-              onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+              returnKeyType="done"
+              onSubmitEditing={handleSubmitEditing}
             />
 
             <TextInput
               placeholder="Password"
               placeholderTextColor={placeholderColor}
               secureTextEntry
-              onChangeText={(text) => setFormData({ ...formData, password: text })}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, password: text }))}
               style={[styles.input, { borderColor, color: inputTextColor }]}
               textContentType="password"
               autoComplete="password"
               value={formData.password}
-              returnKeyType="done" // Add Done button
-              onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+              returnKeyType="done"
+              onSubmitEditing={handleSubmitEditing}
             />
 
             {error && formData.email && formData.password && (

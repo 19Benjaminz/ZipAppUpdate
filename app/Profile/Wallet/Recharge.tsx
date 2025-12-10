@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     Alert,
     Modal,
+    NativeModules,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -17,11 +18,12 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { 
     getRechargeConfig, 
     rechargeWithCreditCard, 
-    rechargeWithPayPal,
     getCreditCards,
-    getWalletBalance 
+    getWalletBalance,
+    rechargeWithPayPal,
 } from '../../features/walletSlice';
-import { payPalService } from '../../services/PayPalService';
+
+const { PayPal } = NativeModules;
 
 interface PaymentMethod {
     type: 'creditcard' | 'paypal';
@@ -29,9 +31,10 @@ interface PaymentMethod {
     icon: string;
 }
 
+import { walletApi } from '../../config/apiService';
 const PAYMENT_METHODS: PaymentMethod[] = [
-    { type: 'creditcard', label: 'Credit Card', icon: 'credit-card' },
-    { type: 'paypal', label: 'PayPal', icon: 'account-balance' },
+    // { type: 'creditcard', label: 'Credit Card', icon: 'credit-card' },
+    { type: 'paypal', label: 'PayPal', icon: 'account-balance-wallet' },
 ];
 
 const Recharge: React.FC = () => {
@@ -49,7 +52,7 @@ const Recharge: React.FC = () => {
     
     const [customAmount, setCustomAmount] = useState<string>('');
     const [useCustomAmount, setUseCustomAmount] = useState<boolean>(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'creditcard' | 'paypal'>('creditcard');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'creditcard' | 'paypal'>('paypal');
     const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
     const [showCvvModal, setShowCvvModal] = useState<boolean>(false);
     const [cvv, setCvv] = useState<string>('');
@@ -156,8 +159,8 @@ const Recharge: React.FC = () => {
         }
     };
 
-    // Handle PayPal payment
-    const handlePayPalPayment = async () => {
+    // Handle PayPal payment with Braintree
+    const handlePayPalPayment = () => {
         if (!isValidAmount()) {
             Alert.alert('Error', 'Minimum recharge amount is $5.00');
             return;
@@ -169,80 +172,83 @@ const Recharge: React.FC = () => {
             return;
         }
 
-        setIsProcessing(true);
-
-        try {
-            // Check if PayPal is available
-            if (!payPalService.isPayPalAvailable()) {
-                // Use simulation for development in Expo Go
-                console.log('[DEV] Using PayPal simulation in Expo Go');
-                
-                Alert.alert(
-                    'PayPal Simulation',
-                    `This is a simulation of PayPal payment for $${amount.toFixed(2)}.\n\nIn production, this would:\n1. Open PayPal authentication\n2. Process the payment\n3. Add funds to your wallet\n\nTo enable real PayPal, create a development build with EAS.`,
-                    [
-                        { text: 'Cancel', style: 'cancel' },
-                        { 
-                            text: 'Simulate Payment', 
-                            onPress: async () => {
-                                try {
-                                    // Simulate processing delay
-                                    await new Promise(resolve => setTimeout(resolve, 2000));
-                                    
-                                    // For now, just show success without calling backend
-                                    // since the backend expects a real nonce
-                                    Alert.alert(
-                                        'Simulation Complete',
-                                        `PayPal payment simulation of $${amount.toFixed(2)} completed!\n\nNote: This was a simulation. No actual money was charged and your wallet balance was not updated.`,
-                                        [{ text: 'OK', onPress: () => navigation.goBack() }]
-                                    );
-                                } catch (error) {
-                                    Alert.alert('Simulation Error', 'Failed to simulate PayPal payment');
-                                }
-                            }
-                        }
-                    ]
-                );
-            } else {
-                // Use real PayPal SDK (for development builds)
-                const paypalResult = await payPalService.processPayment(amount);
-                
-                if (paypalResult.success && paypalResult.nonce) {
-                    await dispatch(rechargeWithPayPal({
-                        accessToken,
-                        memberId,
-                        amount,
-                        paymentMethodNonce: paypalResult.nonce,
-                    })).unwrap();
-
-                    // Refresh wallet balance
-                    dispatch(getWalletBalance({ accessToken, memberId }));
-
-                    Alert.alert(
-                        'Success',
-                        `Successfully recharged $${amount.toFixed(2)} via PayPal!`,
-                        [{ text: 'OK', onPress: () => navigation.goBack() }]
-                    );
-                } else {
-                    throw new Error(paypalResult.error || 'PayPal payment was cancelled');
-                }
-            }
-        } catch (error: any) {
+        // Check if PayPal module is available
+        if (!PayPal || typeof PayPal.payWithAmount !== 'function') {
             Alert.alert(
-                'PayPal Payment Failed',
-                error.message || error || 'Failed to process PayPal payment. Please try again.',
+                'PayPal Not Available',
+                'PayPal payment module is not available on this platform. Please use an alternative payment method.',
                 [{ text: 'OK' }]
             );
-        } finally {
-            setIsProcessing(false);
+            return;
         }
+
+        setIsProcessing(true);
+        console.log('💳 Requesting PayPal payment via Braintree...');
+        console.log(`Amount: $${amount.toFixed(2)}`);
+
+        // Call native PayPal module - matches ZipNewApp implementation
+        PayPal.payWithAmount(
+            `${amount}`,
+            async (signal: boolean, nonce: string) => {
+                console.log('PayPal callback - signal:', signal, 'nonce:', nonce);
+                console.log('Amount:', amount);
+                
+                if (!signal) {
+                    // Payment cancelled or error
+                    setIsProcessing(false);
+                    Alert.alert(
+                        'PayPal Payment Failed',
+                        nonce === 'cancel' ? 'Payment was cancelled' : 
+                        nonce === 'error' ? 'An error occurred during payment' : nonce,
+                        [{ text: 'OK' }]
+                    );
+                    return;
+                }
+
+                try {
+                    console.log('✅ PayPal payment successful, nonce:', nonce);
+
+                    const result = await dispatch(
+                        rechargeWithPayPal({
+                            accessToken: accessToken!,
+                            memberId: memberId!,
+                            amount: amount,
+                            paymentMethodNonce: nonce,
+                        })
+                    ).unwrap();
+
+                    console.log('PayPal recharge result:', result);
+
+                    Alert.alert(
+                        '✅ PayPal Payment Successful!',
+                        `💳 Payment completed successfully!\n\n` +
+                        `Amount: $${amount.toFixed(2)}\n`,
+                        [{ 
+                            text: 'OK', 
+                            onPress: () => {
+                                setIsProcessing(false);
+                                navigation.goBack();
+                            }
+                        }]
+                    );
+                } catch (error: any) {
+                    console.error('PayPal Recharge Failed:', error?.message || error);
+                    setIsProcessing(false);
+                    Alert.alert(
+                        'PayPal Recharge Failed',
+                        error?.message || 'Failed to process PayPal recharge. Please try again.',
+                        [{ text: 'OK' }]
+                    );
+                }
+            }
+        );
     };
 
     // Handle payment based on selected method
     const handlePayment = () => {
         if (selectedPaymentMethod === 'creditcard') {
             handleCreditCardPayment();
-        } else {
+        } else if (selectedPaymentMethod === 'paypal') {
             handlePayPalPayment();
         }
     };
@@ -443,7 +449,8 @@ const Recharge: React.FC = () => {
                     <View style={styles.summaryRow}>
                         <ZIPText style={styles.summaryLabel}>Payment Method:</ZIPText>
                         <ZIPText style={styles.summaryValue}>
-                            {selectedPaymentMethod === 'creditcard' ? 'Credit Card' : 'PayPal'}
+                            {selectedPaymentMethod === 'creditcard' ? 'Credit Card' : 
+                             selectedPaymentMethod === 'paypal' ? 'PayPal' : 'Stripe'}
                         </ZIPText>
                     </View>
                     {balance && (
@@ -532,7 +539,7 @@ const Recharge: React.FC = () => {
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {renderAmountSelection()}
                 {renderPaymentMethods()}
-                {renderCreditCardSelection()}
+                {/* {renderCreditCardSelection()} */}
                 {renderPaymentSummary()}
             </ScrollView>
 

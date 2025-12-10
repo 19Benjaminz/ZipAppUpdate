@@ -71,7 +71,7 @@ const ZipporaHome: React.FC<{ setHomeLoading: (loading: boolean) => void }> = ({
       }
     } catch (error) {
       console.error('Re-login error:', error);
-      Alert.alert('Error', 'Unable to re-login. Please log in manually.');
+      //Alert.alert('Error', 'Unable to re-login. Please log in manually.');
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login/Login' }],
