@@ -22,17 +22,22 @@ class PayPalService {
 
   private async initializeBraintree() {
     try {
-      // Check if Braintree module is available
-      if (NativeModules.BraintreeDropIn) {
+      // Check if PayPal module is available (matches old app's native module name)
+      if (NativeModules.PayPal) {
+        this.braintreeModule = NativeModules.PayPal;
+        this.isInitialized = true;
+        console.log('PayPal SDK initialized successfully');
+      } else if (NativeModules.BraintreeDropIn) {
+        // Fallback to Android module name if available
         this.braintreeModule = NativeModules.BraintreeDropIn;
         this.isInitialized = true;
         console.log('Braintree SDK initialized successfully');
       } else {
-        console.warn('Braintree SDK not available - using fallback');
+        console.warn('PayPal SDK not available - using fallback');
         this.isInitialized = false;
       }
     } catch (error) {
-      console.error('Failed to initialize Braintree SDK:', error);
+      console.error('Failed to initialize PayPal SDK:', error);
       this.isInitialized = false;
     }
   }
@@ -71,32 +76,27 @@ class PayPalService {
 
       if (!this.isInitialized || !this.braintreeModule) {
         // Fallback for development/testing (Expo Go)
-        console.log('[PayPal] Using simulation mode - Braintree SDK not available in Expo Go');
+        console.log('[PayPal] Using simulation mode - PayPal SDK not available in Expo Go');
         return this.simulatePayPalPayment(amount);
       }
 
-      // Configure payment request
-      const paymentRequest = {
-        amount: amount.toString(),
-        currencyCode: 'USD',
-        merchantId: 'your_merchant_id', // You'll need to set this
-        intent: 'sale'
-      };
-
-      // Show PayPal payment UI
-      const result = await this.braintreeModule.showPayPalDropIn(paymentRequest);
-      
-      if (result && result.nonce) {
-        return {
-          success: true,
-          nonce: result.nonce
-        };
-      } else {
-        return {
-          success: false,
-          error: 'Payment was cancelled or failed'
-        };
-      }
+      // Call native PayPal module with amount
+      // This matches the interface from both old iOS and Android implementations
+      return new Promise((resolve) => {
+        this.braintreeModule.payWithAmount(amount.toString(), (success: boolean, result: string) => {
+          if (success) {
+            resolve({
+              success: true,
+              nonce: result
+            });
+          } else {
+            resolve({
+              success: false,
+              error: result // 'error' or 'cancel'
+            });
+          }
+        });
+      });
     } catch (error: any) {
       console.error('PayPal payment failed:', error);
       return {

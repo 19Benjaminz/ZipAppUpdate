@@ -10,6 +10,7 @@ import {
     Alert,
     Modal,
     NativeModules,
+    Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -23,7 +24,10 @@ import {
     rechargeWithPayPal,
 } from '../../features/walletSlice';
 
-const { PayPal } = NativeModules;
+// const { PayPal } = NativeModules;
+const PayPal = Platform.OS === 'ios' 
+  ? NativeModules.PaymentManager   // iOS after you remove (PayPal)
+  : NativeModules.PaymentManager;
 
 interface PaymentMethod {
     type: 'creditcard' | 'paypal';
@@ -33,7 +37,7 @@ interface PaymentMethod {
 
 import { walletApi } from '../../config/apiService';
 const PAYMENT_METHODS: PaymentMethod[] = [
-    // { type: 'creditcard', label: 'Credit Card', icon: 'credit-card' },
+    { type: 'creditcard', label: 'Credit Card', icon: 'credit-card' },
     { type: 'paypal', label: 'PayPal', icon: 'account-balance-wallet' },
 ];
 
@@ -102,62 +106,157 @@ const Recharge: React.FC = () => {
     };
 
     // Handle payment with credit card
+    // Update handleCreditCardPayment to use Drop-In
     const handleCreditCardPayment = async () => {
-        if (!creditCards || creditCards.length === 0) {
-            Alert.alert('Error', 'No credit cards available. Please add a credit card first.');
-            return;
-        }
-
         if (!isValidAmount()) {
             Alert.alert('Error', 'Minimum recharge amount is $5.00');
             return;
         }
 
-        // Show CVV modal for security
-        setShowCvvModal(true);
-    };
-
-    // Process credit card payment with CVV
-    const processCreditCardPayment = async () => {
-        if (!cvv || cvv.length !== 3) {
-            Alert.alert('Error', 'Please enter a valid 3-digit CVV');
-            return;
-        }
-
+        const amount = getRechargeAmount();
         setIsProcessing(true);
-        setShowCvvModal(false);
 
-        try {
-            const selectedCard = creditCards![selectedCardIndex];
-            const amount = getRechargeAmount();
+        console.log('💳 Opening Braintree Drop-In UI...');
 
-            await dispatch(rechargeWithCreditCard({
-                accessToken,
-                memberId,
-                amount,
-                cardId: selectedCard.cardId,
-            })).unwrap();
+        PayPal.showDropInUI(
+            `${amount}`,
+            async (signal: boolean, nonceOrError: string) => {
+                console.log('Drop-In callback Creditcard - success:', signal, 'result:', nonceOrError);
 
-            // Refresh wallet balance
-            dispatch(getWalletBalance({ accessToken, memberId }));
+                if (!signal) {
+                    setIsProcessing(false);
+                    if (nonceOrError !== 'cancel') {
+                        Alert.alert('Payment Failed', nonceOrError);
+                    }
+                    return;
+                }
 
-            Alert.alert(
-                'Success',
-                `Successfully recharged $${amount.toFixed(2)} to your wallet!`,
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-            );
+                try {
+                    console.log('✅ Payment method selected, nonce:', nonceOrError);
 
-        } catch (error: any) {
-            Alert.alert(
-                'Payment Failed',
-                error || 'Failed to process payment. Please try again.',
-                [{ text: 'OK' }]
-            );
-        } finally {
-            setIsProcessing(false);
-            setCvv('');
-        }
+                    await dispatch(
+                        rechargeWithCreditCard({
+                            accessToken: accessToken!,
+                            memberId: memberId!,
+                            amount: amount,
+                            paymentMethodNonce: nonceOrError,
+                        })
+                    ).unwrap();
+
+                    dispatch(getWalletBalance({ accessToken, memberId }));
+
+                    Alert.alert(
+                        '✅ Payment Successful!',
+                        `Successfully recharged $${amount.toFixed(2)}!`,
+                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                    );
+                } catch (error: any) {
+                    console.error('Recharge Failed:', error?.message || error);
+                    Alert.alert('Recharge Failed', error?.message || 'Payment failed');
+                } finally {
+                    setIsProcessing(false);
+                }
+            }
+        );
     };
+
+    // Process credit card payment with CVV using Braintree
+    // const processCreditCardPayment = async () => {
+    //     if (!cvv || cvv.length !== 3) {
+    //         Alert.alert('Error', 'Please enter a valid 3-digit CVV');
+    //         return;
+    //     }
+
+    //     setIsProcessing(true);
+    //     setShowCvvModal(false);
+
+    //     try {
+    //         const selectedCard = creditCards![selectedCardIndex];
+    //         const amount = getRechargeAmount();
+
+    //         // Get card details from your stored card
+    //         // Note: You'll need to have these stored (except CVV which user enters)
+    //         const cardNumber = selectedCard.cardNumber; // You need this stored
+    //         const expirationMonth = selectedCard.expirationMonth; // You need this stored
+    //         const expirationYear = selectedCard.expirationYear; // You need this stored
+    //         const postalCode = selectedCard.postalCode || ''; // Optional
+
+    //         console.log('💳 Tokenizing card via Braintree...');
+
+    //         // Call native Braintree card tokenization
+    //         PayPal.payWithCard(
+    //             cardNumber,
+    //             expirationMonth,
+    //             expirationYear,
+    //             cvv,
+    //             postalCode,
+    //             async (signal: boolean, nonceOrError: string) => {
+    //                 console.log('Card tokenization callback - success:', signal, 'result:', nonceOrError);
+
+    //                 if (!signal) {
+    //                     // Tokenization failed
+    //                     setIsProcessing(false);
+    //                     setCvv('');
+    //                     Alert.alert(
+    //                         'Card Payment Failed',
+    //                         nonceOrError || 'Failed to process card. Please check your card details.',
+    //                         [{ text: 'OK' }]
+    //                     );
+    //                     return;
+    //                 }
+
+    //                 try {
+    //                     console.log('✅ Card tokenization successful, nonce:', nonceOrError);
+
+    //                     // Send nonce to your backend (same API as PayPal!)
+    //                     const result = await dispatch(
+    //                         rechargeWithCreditCard({
+    //                             accessToken: accessToken!,
+    //                             memberId: memberId!,
+    //                             amount: amount,
+    //                             paymentMethodNonce: nonceOrError, // Use the nonce instead of cardId
+    //                         })
+    //                     ).unwrap();
+
+    //                     console.log('Card recharge result:', result);
+
+    //                     // Refresh wallet balance
+    //                     dispatch(getWalletBalance({ accessToken, memberId }));
+
+    //                     Alert.alert(
+    //                         '✅ Payment Successful!',
+    //                         `Successfully recharged $${amount.toFixed(2)} to your wallet!`,
+    //                         [{ 
+    //                             text: 'OK', 
+    //                             onPress: () => {
+    //                                 setIsProcessing(false);
+    //                                 setCvv('');
+    //                                 navigation.goBack();
+    //                             }
+    //                         }]
+    //                     );
+    //                 } catch (error: any) {
+    //                     console.error('Card Recharge Failed:', error?.message || error);
+    //                     setIsProcessing(false);
+    //                     setCvv('');
+    //                     Alert.alert(
+    //                         'Card Recharge Failed',
+    //                         error?.message || 'Failed to process card recharge. Please try again.',
+    //                         [{ text: 'OK' }]
+    //                     );
+    //                 }
+    //             }
+    //         );
+    //     } catch (error: any) {
+    //         setIsProcessing(false);
+    //         setCvv('');
+    //         Alert.alert(
+    //             'Payment Failed',
+    //             error?.message || 'Failed to process payment. Please try again.',
+    //             [{ text: 'OK' }]
+    //         );
+    //     }
+    // };
 
     // Handle PayPal payment with Braintree
     const handlePayPalPayment = () => {
@@ -172,6 +271,7 @@ const Recharge: React.FC = () => {
             return;
         }
 
+        console.log('Paypal stuff: ', NativeModules.PaymentManager);
         // Check if PayPal module is available
         if (!PayPal || typeof PayPal.payWithAmount !== 'function') {
             Alert.alert(
@@ -190,7 +290,7 @@ const Recharge: React.FC = () => {
         PayPal.payWithAmount(
             `${amount}`,
             async (signal: boolean, nonce: string) => {
-                console.log('PayPal callback - signal:', signal, 'nonce:', nonce);
+                console.log('PayPal callback - signal:', signal, '// nonce:', nonce);
                 console.log('Amount:', amount);
                 
                 if (!signal) {
@@ -465,63 +565,63 @@ const Recharge: React.FC = () => {
     };
 
     // Render CVV modal
-    const renderCvvModal = () => (
-        <Modal
-            visible={showCvvModal}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowCvvModal(false)}
-        >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
-                        <ZIPText style={styles.modalTitle}>Enter CVV</ZIPText>
-                        <TouchableOpacity onPress={() => setShowCvvModal(false)}>
-                            <Icon name="close" size={24} color="#333" />
-                        </TouchableOpacity>
-                    </View>
+    // const renderCvvModal = () => (
+    //     <Modal
+    //         visible={showCvvModal}
+    //         transparent={true}
+    //         animationType="slide"
+    //         onRequestClose={() => setShowCvvModal(false)}
+    //     >
+    //         <View style={styles.modalOverlay}>
+    //             <View style={styles.modalContainer}>
+    //                 <View style={styles.modalHeader}>
+    //                     <ZIPText style={styles.modalTitle}>Enter CVV</ZIPText>
+    //                     <TouchableOpacity onPress={() => setShowCvvModal(false)}>
+    //                         <Icon name="close" size={24} color="#333" />
+    //                     </TouchableOpacity>
+    //                 </View>
                     
-                    <View style={styles.modalContent}>
-                        <Icon name="security" size={60} color="#4CAF50" />
-                        <ZIPText style={styles.cvvDescription}>
-                            For your security, please enter the 3-digit CVV from the back of your card. 
-                            This is used only for this transaction and is not stored.
-                        </ZIPText>
+    //                 <View style={styles.modalContent}>
+    //                     <Icon name="security" size={60} color="#4CAF50" />
+    //                     <ZIPText style={styles.cvvDescription}>
+    //                         For your security, please enter the 3-digit CVV from the back of your card. 
+    //                         This is used only for this transaction and is not stored.
+    //                     </ZIPText>
                         
-                        <TextInput
-                            style={styles.cvvInput}
-                            placeholder="CVV"
-                            value={cvv}
-                            onChangeText={setCvv}
-                            keyboardType="numeric"
-                            maxLength={3}
-                            secureTextEntry={true}
-                        />
+    //                     <TextInput
+    //                         style={styles.cvvInput}
+    //                         placeholder="CVV"
+    //                         value={cvv}
+    //                         onChangeText={setCvv}
+    //                         keyboardType="numeric"
+    //                         maxLength={3}
+    //                         secureTextEntry={true}
+    //                     />
                         
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => {
-                                    setShowCvvModal(false);
-                                    setCvv('');
-                                }}
-                            >
-                                <ZIPText style={styles.cancelButtonText}>Cancel</ZIPText>
-                            </TouchableOpacity>
+    //                     <View style={styles.modalButtons}>
+    //                         <TouchableOpacity
+    //                             style={styles.cancelButton}
+    //                             onPress={() => {
+    //                                 setShowCvvModal(false);
+    //                                 setCvv('');
+    //                             }}
+    //                         >
+    //                             <ZIPText style={styles.cancelButtonText}>Cancel</ZIPText>
+    //                         </TouchableOpacity>
                             
-                            <TouchableOpacity
-                                style={[styles.confirmButton, (!cvv || cvv.length !== 3) && styles.confirmButtonDisabled]}
-                                onPress={processCreditCardPayment}
-                                disabled={!cvv || cvv.length !== 3}
-                            >
-                                <ZIPText style={styles.confirmButtonText}>Confirm Payment</ZIPText>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </View>
-        </Modal>
-    );
+    //                         <TouchableOpacity
+    //                             style={[styles.confirmButton, (!cvv || cvv.length !== 3) && styles.confirmButtonDisabled]}
+    //                             onPress={processCreditCardPayment}
+    //                             disabled={!cvv || cvv.length !== 3}
+    //                         >
+    //                             <ZIPText style={styles.confirmButtonText}>Confirm Payment</ZIPText>
+    //                         </TouchableOpacity>
+    //                     </View>
+    //                 </View>
+    //             </View>
+    //         </View>
+    //     </Modal>
+    // );
 
     if (rechargeConfigLoading) {
         return (
@@ -562,7 +662,7 @@ const Recharge: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {renderCvvModal()}
+            {/* {renderCvvModal()} */}
         </SafeAreaView>
     );
 };

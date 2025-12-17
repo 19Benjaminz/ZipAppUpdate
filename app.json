@@ -18,9 +18,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "googleServicesFile": "./GoogleService-Info.plist",
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "runtimeVersion": "1.0.0"
     },
     "android": {
       "package": "com.zipcodexpress1",
@@ -76,7 +74,8 @@
             "imageWidth": "200"
           }
         }
-      ]
+      ],
+      "./plugins/withBraintree"
     ],
     "experiments": {
       "typedRoutes": true

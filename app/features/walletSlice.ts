@@ -216,12 +216,12 @@ export const rechargeWithCreditCard = createAsyncThunk(
       accessToken: string;
       memberId: string;
       amount: number;
-      cardId: string;
+      paymentMethodNonce: string;
     },
     thunkAPI
   ) => {
     try {
-      const response = await walletApi.rechargeWithCreditCard(data);
+      const response = await walletApi.payWithPayPal(data);
       const { ret, msg } = response;
 
       if (ret === 0) {
