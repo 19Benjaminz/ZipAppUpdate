@@ -14,12 +14,14 @@ import java.util.List;
  * Package to register PaymentManager native module
  */
 public class PaymentPackage implements ReactPackage {
+    private static final String TAG = "PaymentPackage";
+    
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        Log.d("PaymentPackage", "createNativeModules called");
+        Log.d(TAG, "createNativeModules called");
         List<NativeModule> modules = new ArrayList<>();
         PaymentManager paymentManager = new PaymentManager(reactContext);
-        Log.d("PaymentPackage", "PaymentManager created with name: " + paymentManager.getName());
+        Log.d(TAG, "PaymentManager created with name: " + paymentManager.getName());
         modules.add(paymentManager);
         return modules;
     }
