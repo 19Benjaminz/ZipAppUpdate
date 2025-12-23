@@ -102,26 +102,26 @@ const Wallet: React.FC = () => {
             icon: 'receipt-long',
             onPress: () => navigation.navigate('Profile/Wallet/Statement'),
         },
-        {
-            title: 'Transaction\nHistory',
-            icon: 'history',
-            onPress: () => navigation.navigate('Profile/Wallet/TransactionHistory'),
-        },
-        {
-            title: 'Credit Cards',
-            icon: 'credit-card',
-            onPress: () => navigation.navigate('Profile/Wallet/CreditCards'),
-        },
-        {
-            title: 'Transfer',
-            icon: 'swap-horiz',
-            onPress: () => console.log('Transfer pressed - Coming soon'),
-        },
-        {
-            title: 'Settings',
-            icon: 'settings',
-            onPress: () => console.log('Settings pressed - Coming soon'),
-        },
+        // {
+        //     title: 'Transaction\nHistory',
+        //     icon: 'history',
+        //     onPress: () => navigation.navigate('Profile/Wallet/TransactionHistory'),
+        // },
+        // {
+        //     title: 'Credit Cards',
+        //     icon: 'credit-card',
+        //     onPress: () => navigation.navigate('Profile/Wallet/CreditCards'),
+        // },
+        // {
+        //     title: 'Transfer',
+        //     icon: 'swap-horiz',
+        //     onPress: () => console.log('Transfer pressed - Coming soon'),
+        // },
+        // {
+        //     title: 'Settings',
+        //     icon: 'settings',
+        //     onPress: () => console.log('Settings pressed - Coming soon'),
+        // },
     ];
 
     return (

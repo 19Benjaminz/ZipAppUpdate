@@ -399,7 +399,7 @@ const Recharge: React.FC = () => {
                                     value={cvv}
                                     onChangeText={setCvv}
                                     keyboardType="numeric"
-                                    maxLength={3}
+                                    maxLength={5}
                                     secureTextEntry={true}
                                 />
                             </View>
@@ -441,7 +441,7 @@ const Recharge: React.FC = () => {
                                 (!cardNumber || !expirationMonth || !expirationYear || !cvv) && styles.confirmButtonDisabled
                             ]}
                             onPress={processCardPayment}
-                            disabled={!cardNumber || !expirationMonth || !expirationYear || !cvv}
+                            disabled={!cardNumber || !expirationMonth || !expirationYear || !cvv || !postalCode}
                         >
                             <ZIPText style={styles.confirmButtonText}>
                                 Pay ${getRechargeAmount().toFixed(2)}
@@ -563,6 +563,10 @@ const Recharge: React.FC = () => {
             Alert.alert('Error', 'Please select a valid amount');
             return;
         }
+
+        console.log('All NativeModules:', Object.keys(NativeModules));
+        console.log('PaymentManager module:', NativeModules.PaymentManager);
+        console.log('PayPal module:', NativeModules.PayPal);
 
         console.log('Paypal stuff: ', NativeModules.PaymentManager);
         // Check if PayPal module is available

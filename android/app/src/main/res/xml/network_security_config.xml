@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for local development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.0.197</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+    
+    <!-- Allow cleartext traffic for Braintree sandbox -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">braintreegateway.com</domain>
+        <domain includeSubdomains="true">braintree-api.com</domain>
+        <domain includeSubdomains="true">paypal.com</domain>
+    </domain-config>
+    
+    <!-- Trust system and user certificates -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Debug mode: trust all certificates (development only) -->
+    <debug-overrides cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
