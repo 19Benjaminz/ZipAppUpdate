@@ -48,18 +48,17 @@ RCT_EXPORT_METHOD(payWithAmount:(NSString *)amount callback:(RCTResponseSenderBl
   });
 }
 
-// Drop-In UI for cards and PayPal
 RCT_EXPORT_METHOD(showDropInUI:(NSString *)amount callback:(RCTResponseSenderBlock)callback) {
   dispatch_async(dispatch_get_main_queue(), ^{
     BTDropInRequest *request = [[BTDropInRequest alloc] init];
     
-    // Enable CVV and postal code collection
-    request.cardholderNameSetting = BTFormFieldRequired;  // Ask for cardholder name
-    // request.postalCodeSetting = BTFormFieldRequired; // Ask for postal code
-    request.shouldMaskSecurityCode = YES;  // Mask CVV input
+    // ✅ DISABLE PayPal - only show card form
+    request.paypalDisabled = YES;
     
-    // Enable postal code verification (AVS)
-    request.vaultManager = YES;  // Required for some verification features
+    // Enable CVV and postal code collection
+    request.cardholderNameSetting = BTFormFieldRequired;
+    request.shouldMaskSecurityCode = YES;
+    request.vaultManager = YES;
     
     BTDropInController *dropIn = [[BTDropInController alloc] 
       initWithAuthorization:@"sandbox_5rj7bnb5_ggbpfszgy9q9999n"
@@ -77,6 +76,47 @@ RCT_EXPORT_METHOD(showDropInUI:(NSString *)amount callback:(RCTResponseSenderBlo
     
     UIViewController *rootVC = [UIApplication sharedApplication].delegate.window.rootViewController;
     [rootVC presentViewController:dropIn animated:YES completion:nil];
+  });
+}
+
+// Add this new method to PaymentManager.m
+// ✅ RENAMED: tokenizeCard (was payWithCard)
+RCT_EXPORT_METHOD(tokenizeCard:(NSString *)cardNumber
+                  expirationMonth:(NSString *)expirationMonth
+                  expirationYear:(NSString *)expirationYear
+                  cvv:(NSString *)cvv
+                  postalCode:(NSString *)postalCode
+                  callback:(RCTResponseSenderBlock)callback) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self.braintreeClient = [[BTAPIClient alloc] initWithAuthorization:@"sandbox_5rj7bnb5_ggbpfszgy9q9999n"];
+    
+    BTCardClient *cardClient = [[BTCardClient alloc] initWithAPIClient:self.braintreeClient];
+    
+    // Braintree v5 API: Create card and set properties
+    BTCard *card = [[BTCard alloc] init];
+    card.number = cardNumber;
+    card.expirationMonth = expirationMonth;
+    card.expirationYear = expirationYear;
+    card.cvv = cvv;
+    
+    // Optional but recommended for fraud protection
+    if (postalCode && postalCode.length > 0) {
+      card.postalCode = postalCode;
+    }
+    
+    [cardClient tokenizeCard:card completion:^(BTCardNonce * _Nullable tokenizedCard, NSError * _Nullable error) {
+      if (tokenizedCard) {
+        NSLog(@"✅ Card tokenized successfully: %@", tokenizedCard.nonce);
+        callback(@[@YES, tokenizedCard.nonce]);
+      } else if (error) {
+        NSString *errorMessage = error.localizedDescription ?: @"Card validation failed";
+        NSLog(@"❌ Card tokenization failed: %@", errorMessage);
+        callback(@[@NO, errorMessage]);
+      } else {
+        NSLog(@"❌ Card tokenization failed: Unknown error");
+        callback(@[@NO, @"Unknown error occurred"]);
+      }
+    }];
   });
 }
 

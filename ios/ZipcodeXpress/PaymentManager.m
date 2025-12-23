@@ -79,4 +79,45 @@ RCT_EXPORT_METHOD(showDropInUI:(NSString *)amount callback:(RCTResponseSenderBlo
   });
 }
 
+// Card payment method
+// ✅ RENAMED: tokenizeCard (was payWithCard)
+RCT_EXPORT_METHOD(tokenizeCard:(NSString *)cardNumber
+                  expirationMonth:(NSString *)expirationMonth
+                  expirationYear:(NSString *)expirationYear
+                  cvv:(NSString *)cvv
+                  postalCode:(NSString *)postalCode
+                  callback:(RCTResponseSenderBlock)callback) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self.braintreeClient = [[BTAPIClient alloc] initWithAuthorization:@"sandbox_5rj7bnb5_ggbpfszgy9q9999n"];
+    
+    BTCardClient *cardClient = [[BTCardClient alloc] initWithAPIClient:self.braintreeClient];
+    
+    // Braintree v5 API: Create card and set properties
+    BTCard *card = [[BTCard alloc] init];
+    card.number = cardNumber;
+    card.expirationMonth = expirationMonth;
+    card.expirationYear = expirationYear;
+    card.cvv = cvv;
+    
+    // Optional but recommended for fraud protection
+    if (postalCode && postalCode.length > 0) {
+      card.postalCode = postalCode;
+    }
+    
+    [cardClient tokenizeCard:card completion:^(BTCardNonce * _Nullable tokenizedCard, NSError * _Nullable error) {
+      if (tokenizedCard) {
+        NSLog(@"✅ Card tokenized successfully: %@", tokenizedCard.nonce);
+        callback(@[@YES, tokenizedCard.nonce]);
+      } else if (error) {
+        NSString *errorMessage = error.localizedDescription ?: @"Card validation failed";
+        NSLog(@"❌ Card tokenization failed: %@", errorMessage);
+        callback(@[@NO, errorMessage]);
+      } else {
+        NSLog(@"❌ Card tokenization failed: Unknown error");
+        callback(@[@NO, @"Unknown error occurred"]);
+      }
+    }];
+  });
+}
+
 @end

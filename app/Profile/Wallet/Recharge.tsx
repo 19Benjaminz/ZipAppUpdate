@@ -26,7 +26,7 @@ import {
 
 // const { PayPal } = NativeModules;
 const PayPal = Platform.OS === 'ios' 
-  ? NativeModules.PaymentManager   // iOS after you remove (PayPal)
+  ? NativeModules.PaymentManager
   : NativeModules.PaymentManager;
 
 interface PaymentMethod {
@@ -35,7 +35,6 @@ interface PaymentMethod {
     icon: string;
 }
 
-import { walletApi } from '../../config/apiService';
 const PAYMENT_METHODS: PaymentMethod[] = [
     { type: 'creditcard', label: 'Credit Card', icon: 'credit-card' },
     { type: 'paypal', label: 'PayPal', icon: 'account-balance-wallet' },
@@ -58,10 +57,15 @@ const Recharge: React.FC = () => {
     const [useCustomAmount, setUseCustomAmount] = useState<boolean>(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'creditcard' | 'paypal'>('paypal');
     const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
-    const [showCvvModal, setShowCvvModal] = useState<boolean>(false);
-    const [cvv, setCvv] = useState<string>('');
     const [selectedRechargeIndex, setSelectedRechargeIndex] = useState<number>(0);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const [showCardForm, setShowCardForm] = useState<boolean>(false);
+    const [cardNumber, setCardNumber] = useState<string>('');
+    const [expirationMonth, setExpirationMonth] = useState<string>('');
+    const [expirationYear, setExpirationYear] = useState<string>('');
+    const [cvv, setCvv] = useState<string>('');
+    const [postalCode, setPostalCode] = useState<string>('');
+    const [cardHolderName, setCardHolderName] = useState<string>('');
 
     // Load data on component mount
     useEffect(() => {
@@ -107,58 +111,347 @@ const Recharge: React.FC = () => {
 
     // Handle payment with credit card
     // Update handleCreditCardPayment to use Drop-In
+    // const handleCreditCardPayment = async () => {
+    //     if (!isValidAmount()) {
+    //         Alert.alert('Error', 'Minimum recharge amount is $5.00');
+    //         return;
+    //     }
+
+    //     const amount = getRechargeAmount();
+    //     setIsProcessing(true);
+
+    //     console.log('💳 Opening Braintree Drop-In UI...');
+
+    //     PayPal.showDropInUI(
+    //         `${amount}`,
+    //         async (signal: boolean, nonceOrError: string) => {
+    //             console.log('Drop-In callback Creditcard - success:', signal, 'result:', nonceOrError);
+
+    //             if (!signal) {
+    //                 setIsProcessing(false);
+    //                 if (nonceOrError !== 'cancel') {
+    //                     Alert.alert('Payment Failed', nonceOrError);
+    //                 }
+    //                 return;
+    //             }
+
+    //             try {
+    //                 console.log('✅ Payment method selected, nonce:', nonceOrError);
+
+    //                 await dispatch(
+    //                     rechargeWithCreditCard({
+    //                         accessToken: accessToken!,
+    //                         memberId: memberId!,
+    //                         amount: amount,
+    //                         paymentMethodNonce: nonceOrError,
+    //                     })
+    //                 ).unwrap();
+
+    //                 dispatch(getWalletBalance({ accessToken, memberId }));
+
+    //                 Alert.alert(
+    //                     '✅ Payment Successful!',
+    //                     `Successfully recharged $${amount.toFixed(2)}!`,
+    //                     [{ text: 'OK', onPress: () => navigation.goBack() }]
+    //                 );
+    //             } catch (error: any) {
+    //                 console.error('Recharge Failed:', error?.message || error);
+    //                 Alert.alert('Recharge Failed', error?.message || 'Payment failed');
+    //             } finally {
+    //                 setIsProcessing(false);
+    //             }
+    //         }
+    //     );
+    // };
+
     const handleCreditCardPayment = async () => {
         if (!isValidAmount()) {
             Alert.alert('Error', 'Minimum recharge amount is $5.00');
             return;
         }
 
+        // Show card form modal
+        setShowCardForm(true);
+    };
+
+    const processCardPayment = async () => {
+        // Validate card inputs
+        if (!cardNumber || cardNumber.length < 13) {
+            Alert.alert('Error', 'Please enter a valid card number');
+            return;
+        }
+        if (!expirationMonth || !expirationYear) {
+            Alert.alert('Error', 'Please enter expiration date');
+            return;
+        }
+        if (!cvv || cvv.length !== 3) {
+            Alert.alert('Error', 'Please enter a valid 3-digit CVV');
+            return;
+        }
+
         const amount = getRechargeAmount();
         setIsProcessing(true);
+        setShowCardForm(false);
 
-        console.log('💳 Opening Braintree Drop-In UI...');
+        console.log('💳 Tokenizing card via Braintree...');
 
-        PayPal.showDropInUI(
-            `${amount}`,
-            async (signal: boolean, nonceOrError: string) => {
-                console.log('Drop-In callback Creditcard - success:', signal, 'result:', nonceOrError);
-
-                if (!signal) {
-                    setIsProcessing(false);
-                    if (nonceOrError !== 'cancel') {
-                        Alert.alert('Payment Failed', nonceOrError);
-                    }
-                    return;
-                }
-
-                try {
-                    console.log('✅ Payment method selected, nonce:', nonceOrError);
-
-                    await dispatch(
-                        rechargeWithCreditCard({
-                            accessToken: accessToken!,
-                            memberId: memberId!,
-                            amount: amount,
-                            paymentMethodNonce: nonceOrError,
-                        })
-                    ).unwrap();
-
-                    dispatch(getWalletBalance({ accessToken, memberId }));
-
-                    Alert.alert(
-                        '✅ Payment Successful!',
-                        `Successfully recharged $${amount.toFixed(2)}!`,
-                        [{ text: 'OK', onPress: () => navigation.goBack() }]
-                    );
-                } catch (error: any) {
-                    console.error('Recharge Failed:', error?.message || error);
-                    Alert.alert('Recharge Failed', error?.message || 'Payment failed');
-                } finally {
-                    setIsProcessing(false);
-                }
+        try {
+            // Check if tokenizeCard method exists
+            console.log('Paypal module:', typeof PayPal.tokenizeCard);
+            if (!PayPal || typeof PayPal.tokenizeCard !== 'function') {
+                Alert.alert(
+                    'Error',
+                    'Card payment is not available. Please update the app.',
+                    [{ text: 'OK' }]
+                );
+                setIsProcessing(false);
+                return;
             }
-        );
+
+            // Call native Braintree card tokenization
+            PayPal.tokenizeCard(
+                cardNumber.replace(/\s/g, ''), // Remove spaces
+                expirationMonth,
+                expirationYear,
+                cvv,
+                postalCode || '',
+                async (signal: boolean, nonceOrError: string) => {
+                    console.log('Card tokenization callback - success:', signal, 'result:', nonceOrError);
+
+                    if (!signal) {
+                        // Tokenization failed
+                        setIsProcessing(false);
+                        clearCardForm();
+                        Alert.alert(
+                            'Card Payment Failed',
+                            nonceOrError || 'Failed to process card. Please check your card details.',
+                            [{ text: 'OK' }]
+                        );
+                        return;
+                    }
+
+                    try {
+                        console.log('✅ Card tokenization successful, nonce:', nonceOrError);
+
+                        // Send nonce to your backend
+                        await dispatch(
+                            rechargeWithCreditCard({
+                                accessToken: accessToken!,
+                                memberId: memberId!,
+                                amount: amount,
+                                paymentMethodNonce: nonceOrError,
+                            })
+                        ).unwrap();
+
+                        console.log('Card recharge successful');
+
+                        // Refresh wallet balance
+                        dispatch(getWalletBalance({ accessToken, memberId }));
+
+                        Alert.alert(
+                            '✅ Payment Successful!',
+                            `Successfully recharged $${amount.toFixed(2)} to your wallet!`,
+                            [{ 
+                                text: 'OK', 
+                                onPress: () => {
+                                    setIsProcessing(false);
+                                    clearCardForm();
+                                    navigation.goBack();
+                                }
+                            }]
+                        );
+                    } catch (error: any) {
+                        console.error('Card Recharge Failed:', error?.message || error);
+                        setIsProcessing(false);
+                        clearCardForm();
+                        Alert.alert(
+                            'Card Recharge Failed',
+                            error?.message || 'Failed to process card recharge. Please try again.',
+                            [{ text: 'OK' }]
+                        );
+                    }
+                }
+            );
+        } catch (error: any) {
+            setIsProcessing(false);
+            clearCardForm();
+            Alert.alert(
+                'Payment Failed',
+                error?.message || 'Failed to process payment. Please try again.',
+                [{ text: 'OK' }]
+            );
+        }
     };
+
+    // Helper function to clear card form
+    const clearCardForm = () => {
+        setCardNumber('');
+        setExpirationMonth('');
+        setExpirationYear('');
+        setCvv('');
+        setPostalCode('');
+        setCardHolderName('');
+    };
+
+    // Format card number with spaces
+    const handleCardNumberChange = (text: string) => {
+        const cleaned = text.replace(/\s/g, '');
+        const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
+        setCardNumber(formatted);
+    };
+
+    // Format expiration date
+    const handleExpirationChange = (text: string, field: 'month' | 'year') => {
+        const numericValue = text.replace(/[^0-9]/g, '');
+        if (field === 'month') {
+            if (numericValue.length <= 2) {
+                setExpirationMonth(numericValue);
+            }
+        } else {
+            if (numericValue.length <= 2) {
+                setExpirationYear(numericValue);
+            }
+        }
+    };
+
+    // Replace the renderCvvModal with renderCardForm
+    const renderCardForm = () => (
+        <Modal
+            visible={showCardForm}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => {
+                setShowCardForm(false);
+                clearCardForm();
+            }}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.cardFormContainer}>
+                    <View style={styles.modalHeader}>
+                        <ZIPText style={styles.modalTitle}>Enter Card Details</ZIPText>
+                        <TouchableOpacity onPress={() => {
+                            setShowCardForm(false);
+                            clearCardForm();
+                        }}>
+                            <Icon name="close" size={24} color="#333" />
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <ScrollView style={styles.cardFormContent}>
+                        {/* Card Holder Name */}
+                        <View style={styles.inputGroup}>
+                            <ZIPText style={styles.inputLabel}>Cardholder Name</ZIPText>
+                            <TextInput
+                                style={styles.cardInput}
+                                placeholder="John Doe"
+                                value={cardHolderName}
+                                onChangeText={setCardHolderName}
+                                autoCapitalize="words"
+                            />
+                        </View>
+
+                        {/* Card Number */}
+                        <View style={styles.inputGroup}>
+                            <ZIPText style={styles.inputLabel}>Card Number</ZIPText>
+                            <TextInput
+                                style={styles.cardInput}
+                                placeholder="1234 5678 9012 3456"
+                                value={cardNumber}
+                                onChangeText={handleCardNumberChange}
+                                keyboardType="numeric"
+                                maxLength={19} // 16 digits + 3 spaces
+                            />
+                        </View>
+
+                        {/* Expiration Date */}
+                        <View style={styles.inputRow}>
+                            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                                <ZIPText style={styles.inputLabel}>Exp. Month (MM)</ZIPText>
+                                <TextInput
+                                    style={styles.cardInput}
+                                    placeholder="12"
+                                    value={expirationMonth}
+                                    onChangeText={(text) => handleExpirationChange(text, 'month')}
+                                    keyboardType="numeric"
+                                    maxLength={2}
+                                />
+                            </View>
+                            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                                <ZIPText style={styles.inputLabel}>Exp. Year (YY)</ZIPText>
+                                <TextInput
+                                    style={styles.cardInput}
+                                    placeholder="25"
+                                    value={expirationYear}
+                                    onChangeText={(text) => handleExpirationChange(text, 'year')}
+                                    keyboardType="numeric"
+                                    maxLength={2}
+                                />
+                            </View>
+                        </View>
+
+                        {/* CVV and Postal Code */}
+                        <View style={styles.inputRow}>
+                            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                                <ZIPText style={styles.inputLabel}>CVV</ZIPText>
+                                <TextInput
+                                    style={styles.cardInput}
+                                    placeholder="123"
+                                    value={cvv}
+                                    onChangeText={setCvv}
+                                    keyboardType="numeric"
+                                    maxLength={3}
+                                    secureTextEntry={true}
+                                />
+                            </View>
+                            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                                <ZIPText style={styles.inputLabel}>Postal Code</ZIPText>
+                                <TextInput
+                                    style={styles.cardInput}
+                                    placeholder="12345"
+                                    value={postalCode}
+                                    onChangeText={setPostalCode}
+                                    keyboardType="numeric"
+                                    maxLength={10}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.securityNote}>
+                            <Icon name="security" size={20} color="#4CAF50" />
+                            <ZIPText style={styles.securityText}>
+                                Your card information is encrypted and secure
+                            </ZIPText>
+                        </View>
+                    </ScrollView>
+                    
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => {
+                                setShowCardForm(false);
+                                clearCardForm();
+                            }}
+                        >
+                            <ZIPText style={styles.cancelButtonText}>Cancel</ZIPText>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                            style={[
+                                styles.confirmButton,
+                                (!cardNumber || !expirationMonth || !expirationYear || !cvv) && styles.confirmButtonDisabled
+                            ]}
+                            onPress={processCardPayment}
+                            disabled={!cardNumber || !expirationMonth || !expirationYear || !cvv}
+                        >
+                            <ZIPText style={styles.confirmButtonText}>
+                                Pay ${getRechargeAmount().toFixed(2)}
+                            </ZIPText>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
 
     // Process credit card payment with CVV using Braintree
     // const processCreditCardPayment = async () => {
@@ -661,7 +954,8 @@ const Recharge: React.FC = () => {
                     )}
                 </TouchableOpacity>
             </View>
-
+            
+            {renderCardForm()}
             {/* {renderCvvModal()} */}
         </SafeAreaView>
     );
@@ -975,6 +1269,52 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    cardFormContainer: {
+        backgroundColor: 'white',
+        borderRadius: 16,
+        margin: 20,
+        width: '90%',
+        maxWidth: 400,
+        maxHeight: '85%',
+    },
+    cardFormContent: {
+        padding: 20,
+    },
+    inputGroup: {
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 8,
+    },
+    cardInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#f9f9f9',
+    },
+    inputRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    securityNote: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#e8f5e8',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 16,
+    },
+    securityText: {
+        fontSize: 12,
+        color: '#4CAF50',
+        marginLeft: 8,
+        flex: 1,
     },
 });
 
