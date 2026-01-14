@@ -47,17 +47,35 @@ const Register = () => {
     }
   };
 
-  const handlePasswordValidation = () => {
-    if (password !== confirmPassword) {
+  const handlePasswordValidation = (pwd: string = password, confirmPwd: string = confirmPassword) => {
+    // Only show error if confirmPassword has content and doesn't match
+    if (confirmPwd.length > 0 && pwd !== confirmPwd) {
       setPasswordError('Passwords do not match.');
     } else {
       setPasswordError('');
     }
   };
   
+  const formatPhoneNumberInput = (text: string) => {
+    // Remove all non-numeric characters
+    const cleaned = text.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    const limited = cleaned.slice(0, 10);
+    
+    // Format as xxx-xxx-xxxx
+    if (limited.length <= 3) {
+      return limited;
+    } else if (limited.length <= 6) {
+      return `${limited.slice(0, 3)}-${limited.slice(3)}`;
+    } else {
+      return `${limited.slice(0, 3)}-${limited.slice(3, 6)}-${limited.slice(6)}`;
+    }
+  };
+  
   const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^[0-9]{10}$/; // Example: 10 digits
-    return phoneRegex.test(phone);
+    const cleaned = phone.replace(/\D/g, '');
+    return cleaned.length === 10; // Must be exactly 10 digits
   };
   
   const handlePhoneValidation = () => {
@@ -154,14 +172,15 @@ const Register = () => {
         {/* Phone Number Field */}
         <CommonTextInput
           leftTitle="Phone Number"
-          placeholder="Enter Phone Number"
+          placeholder="123-456-7890"
           placeholderTextColor="lightgray"
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="phone-pad"
           value={phoneNum}
           onChangeText={(text) => {
-            setPhoneNum(text.replace(/[^0-9]/g, '')); // Allow only numbers
+            const formatted = formatPhoneNumberInput(text);
+            setPhoneNum(formatted);
             if (phoneError) handlePhoneValidation(); // Revalidate if there's an error
           }}
           onEndEditing={handlePhoneValidation} // Validate on blur
@@ -184,9 +203,11 @@ const Register = () => {
           value={password}
           onChangeText={(text) => {
             setPassword(text);
-            if (passwordError) handlePasswordValidation();
+            // Validate immediately if confirm password has content
+            if (confirmPassword.length > 0) {
+              handlePasswordValidation(text, confirmPassword);
+            }
           }}
-          onEndEditing={handlePasswordValidation}
           textContentType="none"
           autoComplete="off"
         />
@@ -203,9 +224,9 @@ const Register = () => {
           value={confirmPassword}
           onChangeText={(text) => {
             setConfirmPassword(text);
-            if (passwordError) handlePasswordValidation();
+            // Validate immediately as user types
+            handlePasswordValidation(password, text);
           }}
-          onEndEditing={handlePasswordValidation}
           textContentType="none"
           autoComplete="off"
           isError={!!passwordError} // Highlight Confirm Password field if passwords don't match

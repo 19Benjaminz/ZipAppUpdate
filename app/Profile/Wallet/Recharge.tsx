@@ -55,7 +55,7 @@ const Recharge: React.FC = () => {
     
     const [customAmount, setCustomAmount] = useState<string>('');
     const [useCustomAmount, setUseCustomAmount] = useState<boolean>(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'creditcard' | 'paypal'>('paypal');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'creditcard' | 'paypal'>('creditcard');
     const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
     const [selectedRechargeIndex, setSelectedRechargeIndex] = useState<number>(0);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -171,7 +171,10 @@ const Recharge: React.FC = () => {
         }
 
         // Show card form modal
-        setShowCardForm(true);
+        if (cardNumber.length == 0 && expirationMonth.length == 0
+            && expirationYear.length == 0 && cardHolderName.length == 0 && postalCode.length == 0) {
+            setShowCardForm(true);
+        }
     };
 
     const processCardPayment = async () => {
@@ -759,6 +762,47 @@ const Recharge: React.FC = () => {
         </View>
     );
 
+    // Add this new function after your other handler functions
+    const handleStoredCardSelection = (index: number) => {
+        setSelectedCardIndex(index);
+        
+        // Pre-fill the form with stored card data
+        if (creditCards && creditCards[index]) {
+            const selectedCard = creditCards[index];
+            
+            // Set card holder name
+            if (selectedCard.cardHolderName) {
+                setCardHolderName(selectedCard.cardHolderName);
+            }
+            
+            // Set card number (if you have it stored - likely just last 4 digits)
+            // Note: You typically can't get full card number from stored cards for security
+            // You might only have the last 4 digits
+            if (selectedCard.cardLast4) {
+                // If you only have last 4, you can't pre-fill the full number
+                // setCardNumber(`**** **** **** ${selectedCard.cardLast4}`);
+                // Leave empty for user to enter
+                setCardNumber('');
+            }
+            
+            // // Set expiration month and year
+            // if (selectedCard.expirationMonth) {
+            //     setExpirationMonth(selectedCard.expirationMonth);
+            // }
+            // if (selectedCard.expirationYear) {
+            //     setExpirationYear(selectedCard.expirationYear);
+            // }
+            
+            // // Set postal code
+            // if (selectedCard.postalCode) {
+            //     setPostalCode(selectedCard.postalCode);
+            // }
+            
+            // CVV is never stored - leave empty for user to enter
+            setCvv('');
+        }
+    };
+
     // Render credit card selection
     const renderCreditCardSelection = () => {
         if (selectedPaymentMethod !== 'creditcard') return null;
@@ -861,65 +905,6 @@ const Recharge: React.FC = () => {
         );
     };
 
-    // Render CVV modal
-    // const renderCvvModal = () => (
-    //     <Modal
-    //         visible={showCvvModal}
-    //         transparent={true}
-    //         animationType="slide"
-    //         onRequestClose={() => setShowCvvModal(false)}
-    //     >
-    //         <View style={styles.modalOverlay}>
-    //             <View style={styles.modalContainer}>
-    //                 <View style={styles.modalHeader}>
-    //                     <ZIPText style={styles.modalTitle}>Enter CVV</ZIPText>
-    //                     <TouchableOpacity onPress={() => setShowCvvModal(false)}>
-    //                         <Icon name="close" size={24} color="#333" />
-    //                     </TouchableOpacity>
-    //                 </View>
-                    
-    //                 <View style={styles.modalContent}>
-    //                     <Icon name="security" size={60} color="#4CAF50" />
-    //                     <ZIPText style={styles.cvvDescription}>
-    //                         For your security, please enter the 3-digit CVV from the back of your card. 
-    //                         This is used only for this transaction and is not stored.
-    //                     </ZIPText>
-                        
-    //                     <TextInput
-    //                         style={styles.cvvInput}
-    //                         placeholder="CVV"
-    //                         value={cvv}
-    //                         onChangeText={setCvv}
-    //                         keyboardType="numeric"
-    //                         maxLength={3}
-    //                         secureTextEntry={true}
-    //                     />
-                        
-    //                     <View style={styles.modalButtons}>
-    //                         <TouchableOpacity
-    //                             style={styles.cancelButton}
-    //                             onPress={() => {
-    //                                 setShowCvvModal(false);
-    //                                 setCvv('');
-    //                             }}
-    //                         >
-    //                             <ZIPText style={styles.cancelButtonText}>Cancel</ZIPText>
-    //                         </TouchableOpacity>
-                            
-    //                         <TouchableOpacity
-    //                             style={[styles.confirmButton, (!cvv || cvv.length !== 3) && styles.confirmButtonDisabled]}
-    //                             onPress={processCreditCardPayment}
-    //                             disabled={!cvv || cvv.length !== 3}
-    //                         >
-    //                             <ZIPText style={styles.confirmButtonText}>Confirm Payment</ZIPText>
-    //                         </TouchableOpacity>
-    //                     </View>
-    //                 </View>
-    //             </View>
-    //         </View>
-    //     </Modal>
-    // );
-
     if (rechargeConfigLoading) {
         return (
             <SafeAreaView style={styles.container}>
@@ -936,7 +921,7 @@ const Recharge: React.FC = () => {
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {renderAmountSelection()}
                 {renderPaymentMethods()}
-                {/* {renderCreditCardSelection()} */}
+                {renderCreditCardSelection()}
                 {renderPaymentSummary()}
             </ScrollView>
 

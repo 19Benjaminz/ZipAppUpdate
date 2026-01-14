@@ -107,11 +107,11 @@ const Wallet: React.FC = () => {
         //     icon: 'history',
         //     onPress: () => navigation.navigate('Profile/Wallet/TransactionHistory'),
         // },
-        // {
-        //     title: 'Credit Cards',
-        //     icon: 'credit-card',
-        //     onPress: () => navigation.navigate('Profile/Wallet/CreditCards'),
-        // },
+        {
+            title: 'Credit Cards',
+            icon: 'credit-card',
+            onPress: () => navigation.navigate('Profile/Wallet/CreditCards'),
+        },
         // {
         //     title: 'Transfer',
         //     icon: 'swap-horiz',
