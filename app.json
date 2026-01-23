@@ -1,8 +1,9 @@
 {
   "expo": {
     "name": "ZipcodeXpress",
-    "slug": "ZipcodeXpress",
-    "version": "2.0.2",
+    "main": "expo-router/entry",
+    "slug": "ZipAppTwo",
+    "version": "2.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/zipcodexpress_square.png",
     "scheme": "myapp",
@@ -10,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.unibox.express",
-      "buildNumber": "2.0.21",
+      "buildNumber": "2.0.36",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -24,15 +25,16 @@
     },
     "android": {
       "package": "com.zipcodexpress1",
-      "versionCode": 52,
+      "versionCode": 59,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
       "googleServicesFile": "./google-services.json",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.0.0",
+      "splash": {
+        "textColor": null
+      }
     },
     "web": {
       "bundler": "metro",
@@ -49,14 +51,13 @@
           "recordAudioAndroid": true
         }
       ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
-      "react-native-braintree-dropin-ui",
       [
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static"
+            "useFrameworks": "static",
+            "deploymentTarget": "15.1",
+            "allowNonModularIncludesInFrameworkModules": true
           },
           "android": {
             "minSdkVersion": 21
@@ -67,14 +68,17 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#ffffff",
+          "hideText": true,
           "ios": {
             "image": "./assets/images/SplashScreen_1125x2436.png",
             "enableFullScreenImage_legacy": true
           },
           "android": {
-            "image": "./assets/images/ZipporaLogo-square.png",
+            "image": "./assets/images/images/ZipporaLogo-square.png",
             "resizeMode": "contain",
-            "imageWidth": "200"
+            "imageWidth": "200",
+            "showLogo": false,
+            "hideText": true
           }
         }
       ]

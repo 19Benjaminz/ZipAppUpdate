@@ -20,7 +20,8 @@ import SubToAPT from './Zippora/SubToAPT';
 import ZipporaInfo from './Zippora/ZipporaInfo';
 import ZipLogs from './Zippora/ZipLogs';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import messaging from '@react-native-firebase/messaging';
+// @ts-ignore
+import messaging from 'expo-firebase-messaging';
 import * as SecureStore from 'expo-secure-store';
 import { Alert, View } from 'react-native';
 import * as Notifications from "expo-notifications";
@@ -69,60 +70,61 @@ export default function RootLayout() {
 
   // Firebase setup for FCM token and notifications
   useEffect(() => {
-    const setupFirebase = async () => {
+    const setupNotifications = async () => {
       try {
-        // Request notification permissions
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-        if (enabled) {
-          // Retrieve FCM token
-          const token = await messaging().getToken();
-
-          // Store the FCM token securely
-          await SecureStore.setItemAsync('zipcodexpress-device-token', token);
-
-          // Handle foreground notifications
-          messaging().onMessage(async (remoteMessage) => {
-            console.log("Foreground Notification:", remoteMessage);
-
-            // Show local notification when receiving FCM while in foreground
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: remoteMessage.notification?.title ?? "New Notification",
-                body: remoteMessage.notification?.body ?? "You have a new message",
-                data: remoteMessage.data, // Pass custom data if needed
-              },
-              trigger: null, // Immediately show the notification
-            });
-          });
-
-          // Handle notifications opened from the background
-          messaging().onNotificationOpenedApp((remoteMessage) => {
-            console.log(
-              'Notification caused app to open:',
-              remoteMessage.notification
-            );
-          });
-
-          // Handle notifications when the app is opened from a terminated state
-          const initialNotification = await messaging().getInitialNotification();
-          if (initialNotification) {
-            console.log(
-              'App opened from quit state due to notification:',
-              initialNotification.notification
-            );
-          }
-        } else {
-          console.log("Notification permissions denied.");
+        // 1. Request permission (this also registers the device with APNs/FCM)
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Notification permissions denied');
+          return;
         }
+
+        // 2. Get the Expo push token (this is what you send to your server)
+        const token = (await Notifications.getExpoPushTokenAsync()).data;
+        console.log('Expo Push Token:', token);
+
+        // 3. Store it securely (same key you used before)
+        await SecureStore.setItemAsync('zipcodexpress-device-token', token);
+
+        // 4. Listen to foreground messages
+        const foregroundSubscription = messaging().onMessage(async (remoteMessage) => {
+          console.log('Foreground FCM message:', remoteMessage);
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: remoteMessage.notification?.title || 'New Message',
+              body: remoteMessage.notification?.body || 'You have a new notification',
+              data: remoteMessage.data || {},
+              sound: 'default',
+            },
+            trigger: null, // show immediately
+          });
+        });
+
+        // 5. App opened from background
+        const backgroundSubscription = messaging().onNotificationOpenedApp((remoteMessage) => {
+          console.log('App opened from background by notification:', remoteMessage);
+          // Navigate if you want → you already have expo-router
+        });
+
+        // 6. App opened from quit state
+        const initialNotification = await messaging().getInitialNotification();
+        if (initialNotification) {
+          console.log('App opened from quit state:', initialNotification);
+          // Navigate if needed
+        }
+
+        // Cleanup on unmount
+        return () => {
+          foregroundSubscription();
+          backgroundSubscription();
+        };
       } catch (error) {
-        console.error("Error in Firebase setup:", error);
+        console.error('Notification setup failed:', error);
       }
     };
 
-    setupFirebase();
+    setupNotifications();
   }, []);
 
   // Render the app once fonts are loaded

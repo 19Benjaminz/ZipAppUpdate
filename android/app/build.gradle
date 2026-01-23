@@ -92,7 +92,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 52
-        versionName "2.0.2"
+        versionName "2.0.4"
     }
     signingConfigs {
         debug {
@@ -149,7 +149,6 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation project(':react-native-gesture-handler')
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
@@ -174,6 +173,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Braintree SDK v3 for PayPal integration (matches ZipNewApp)
+    implementation 'com.braintreepayments.api:braintree:3.15.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

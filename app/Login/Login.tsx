@@ -112,22 +112,17 @@ const Login = () => {
               placeholder="Email"
               placeholderTextColor={placeholderColor}
               value={formData.email}
-              onChangeText={(text) => {
-                setFormData((prev) => ({ ...prev, email: text }));
-              }}
-              onEndEditing={(e) => {
-                const text = e.nativeEvent.text;
-                setTimeout(() => {
-                  setFormData((prev) => ({ ...prev, email: text }));
-                }, 0);
-              }}
+              // onChangeText={(text) => {
+              //   setFormData((prev) => ({ ...prev, email: text }));
+              // }}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
               style={[styles.input, { borderColor, color: inputTextColor }]}
               keyboardType="email-address"
               textContentType="username"
               autoComplete="username"
               autoCapitalize="none"
-              returnKeyType="done" // Add Done button
-              onSubmitEditing={handleSubmitEditing} // Dismiss keyboard on Done
+              returnKeyType="done"
+              onSubmitEditing={handleSubmitEditing}
             />
 
             <TextInput
