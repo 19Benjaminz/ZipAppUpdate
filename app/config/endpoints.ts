@@ -49,7 +49,7 @@ export const API_ENDPOINTS = {
       VERIFY_ACCOUNT: 'login/verifyAccount',
       RESEND_EMAIL: 'login/reSendEmail',
       CHANGE_PASSWORD: 'login/changePsd',
-      VERIFY_EMAIL: 'login/verifyEmail',
+      CHECK_EMAIL: 'login/checkEmail',
       SEND_VCODE: 'login/sendvcode',
       LOGOUT: 'login/logout',
     },

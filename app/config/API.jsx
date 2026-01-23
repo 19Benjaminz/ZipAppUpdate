@@ -54,7 +54,7 @@ export const LOGIN_RESET_PSD = "login/resetPsd";
 export const VERIFY_ACCOUNT = 'login/verifyAccount';
 export const RESEND_EMAIL = "login/reSendEmail";
 export const CHANGE_PSD = "login/changePsd";
-export const VERIFY_EMAIL = "login/verifyEmail";
+export const CHECK_EMAIL = "login/checkEmail";
 
 
 //PHOTO

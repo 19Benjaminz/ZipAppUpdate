@@ -31,6 +31,13 @@ export const authApi = {
             headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
         });
     },
+    checkEmail: async (email: string) => {
+        const payload = new FormData();
+        payload.append('email', email);
+        return apiClient.post(API_ENDPOINTS.LOGIN.CHECK_EMAIL, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' }, // Ensure correct headers
+        });
+    },
     sendRegisterVcode: async (email: string, flag: string = '') => {
         const requestURL = API_ENDPOINTS.LOGIN.SEND_VCODE;
     

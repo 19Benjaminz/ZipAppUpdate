@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Text,
+  Alert
 } from 'react-native';
 import ZIPText from '@/components/ZIPText';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -13,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../components/types';
 import { useAppDispatch } from '../store';
-import { sendRegisterVcode } from '../features/authSlice';
+import { sendRegisterVcode, checkEmail } from '../features/authSlice';
 import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
 import LoadingOverlay from '@/components/LoadingOverlay';
 
@@ -90,21 +91,42 @@ const Register = () => {
     console.log('Registering with email...');
     if (!email) return;
     try {
-      await sendVcodeAction();
-      const standardizedFirstName = capitalizeFirstLetter(firstName);
-      const standardizedLastName = capitalizeFirstLetter(lastName);
-      const formattedPhone = formatPhoneNumber(phoneNum);
-      setFirstName(standardizedFirstName);
-      setLastName(standardizedLastName);
-      setPhoneNum(formattedPhone);
-      navigation.navigate('Login/RegistrationVerificationPage', {
-        email,
-        phoneNum,
-        firstName,
-        lastName,
-        psd1: password,
-        psd2: confirmPassword,
-      });
+      const checkEmailRet = await checkEmailAction();
+      console.log("checkEmail: ", checkEmailRet)
+      if (checkEmailRet == 0) {
+        await sendVcodeAction();
+        const standardizedFirstName = capitalizeFirstLetter(firstName);
+        const standardizedLastName = capitalizeFirstLetter(lastName);
+        const formattedPhone = formatPhoneNumber(phoneNum);
+        setFirstName(standardizedFirstName);
+        setLastName(standardizedLastName);
+        setPhoneNum(formattedPhone);
+        navigation.navigate('Login/RegistrationVerificationPage', {
+          email,
+          phoneNum,
+          firstName,
+          lastName,
+          psd1: password,
+          psd2: confirmPassword,
+        });
+      }
+      else {
+        Alert.alert(
+          "Error", 
+          "Email has already been registered. Please Login",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login/Login' }],
+                });
+              }
+            }
+          ]
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -119,6 +141,17 @@ const Register = () => {
       setLoading(false);
     }
   };
+
+  const checkEmailAction = async () => {
+    try {
+      setLoading(true)
+      const ret = await dispatch(checkEmail(email)).unwrap();
+      return ret
+    } catch (error) {
+      console.error('Failed to check Email', error);
+      setLoading(false);
+    }
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>

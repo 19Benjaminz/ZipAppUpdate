@@ -63,6 +63,25 @@ export const register = createAsyncThunk(
     }
 );
 
+export const checkEmail = createAsyncThunk(
+    'auth/checkEmail',
+    async (email: string, thunkAPI) => {
+      try {
+        const response = await authApi.checkEmail(email);
+        const { ret, data, msg } = response.data;
+  
+        if (ret === 0) {
+          return response;
+        } else {
+            return response.data.ret;
+        }
+      } catch (error: any) {
+        return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+      }
+    }
+);
+
+
 export const sendRegisterVcode = createAsyncThunk(
     'auth/sendVcode',
     async (email: string, { rejectWithValue }) => {
@@ -87,11 +106,12 @@ export const sendForgotPasswordVcode = createAsyncThunk(
       try {
         const response = await authApi.sendForgotPasswordVcode(email);
         const { ret, data, msg } = response.data;
+        console.log("checkEmail Response: ", response)
   
         if (ret === 0) {
-          return data; // Return the data if successful
+            return ret; // Return the data if successful
         } else {
-          return rejectWithValue(msg || "Failed to send verification code");
+            return rejectWithValue(msg || "Failed to send verification code");
         }
       } catch (error: any) {
         return rejectWithValue(error.response?.data?.message || "Unexpected error occurred");
