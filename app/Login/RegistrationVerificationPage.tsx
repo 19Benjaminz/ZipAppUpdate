@@ -56,11 +56,11 @@ const RegistrationVerificationPage = () => {
         const resultAction = await dispatch(register(credentials));
         console.log("Registration result:", resultAction);
         if (register.fulfilled.match(resultAction)) {
-          const payload = resultAction.payload;
+          const payload = resultAction.payload as any;
           console.log("Registration response payload:", payload);
 
-          // Handle specific cases based on payload (which is the error code)
-          switch (payload) {
+          // Handle specific cases based on payload.ret
+          switch (payload.ret) {
             case 0: // Registration success
               console.log("Registration successful!");
               Alert.alert("Success", "Registration successful!");
@@ -88,7 +88,7 @@ const RegistrationVerificationPage = () => {
               break;
             default:
               console.error("Unhandled case. Payload:", payload);
-              Alert.alert("Error", "Unexpected error occurred.");
+              Alert.alert("Error", payload.msg || "Unexpected error occurred.");
           }
         }
       } catch (error) {

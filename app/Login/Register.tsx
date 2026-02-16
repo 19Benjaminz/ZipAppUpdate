@@ -17,6 +17,7 @@ import { useAppDispatch } from '../store';
 import { sendRegisterVcode, checkEmail } from '../features/authSlice';
 import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { md5Hash } from '../Actions/ToMD5';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -106,8 +107,8 @@ const Register = () => {
           phoneNum,
           firstName,
           lastName,
-          psd1: password,
-          psd2: confirmPassword,
+          psd1: md5Hash(password),
+          psd2: md5Hash(confirmPassword),
         });
       }
       else {

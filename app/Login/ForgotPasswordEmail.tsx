@@ -33,9 +33,11 @@ const ForgotPasswordEmail: React.FC = () => {
       setLoading(true);
       // Simulate API request to send verification code
       const data = await dispatch(sendForgotPasswordVcode(email));
+      console.log('API response:', data);
       const memberId = (data as any).payload?.memberId;
       console.log('Sending verification code to email:', email);
       Alert.alert('Success', 'Verification code sent to your email.');
+      console.log(memberId)
       if (memberId) {
         navigation.navigate('Login/ForgotPasswordForm', { memberId, email });
       }
