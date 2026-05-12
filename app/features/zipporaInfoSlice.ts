@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { zipporaApi } from '../config/apiService';
+import { zipporaApi } from '@/config/apiService';
 
 interface BoxPenalty {
   amount: string;
@@ -55,10 +55,42 @@ interface ZipporaLog {
   cabinetId: string;
 }
 
+export interface PenaltyPackage {
+  storeId: string;
+  boxModelId?: string;
+  storeTime?: number;
+  overdueDays: number;
+  penaltyAmount: number;
+  isPenaltyPaid: boolean;
+  paidAmount?: number;
+  paidTime?: number;
+}
+
+interface PenaltyValidationResult {
+  allowPickup: boolean;
+  totalPenalty: number;
+  packages: PenaltyPackage[];
+}
+
+interface PenaltyPaymentResult {
+  paidAmount: number;
+  remainingBalance: number;
+  paidPackages: Array<{
+    storeId: string;
+    paidAmount: number;
+    overdueDays: number;
+  }>;
+}
+
 interface ZipporaState {
   apartmentList: Apartment[];
   selfStoreList: SelfStore[];
   zipporaLog: ZipporaLog[];
+  penaltyValidation: PenaltyValidationResult | null;
+  penaltyByStore: Record<string, PenaltyPackage>;
+  penaltyLoading: boolean;
+  penaltyError: string | null;
+  payingPenaltyStoreId: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -67,6 +99,11 @@ const initialState: ZipporaState = {
   apartmentList: [],
   selfStoreList: [],
   zipporaLog:[],
+  penaltyValidation: null,
+  penaltyByStore: {},
+  penaltyLoading: false,
+  penaltyError: null,
+  payingPenaltyStoreId: null,
   loading: false,
   error: null,
 };
@@ -137,10 +174,168 @@ export const scanQRCode = createAsyncThunk(
   }
 );
 
+export const validatePickupChargeRule = createAsyncThunk(
+  'zippora/validatePickupChargeRule',
+  async (payload: { storeId?: string } | undefined, thunkAPI) => {
+    const state: any = thunkAPI.getState();
+    const { accessToken, memberId } = state.userInfo;
+
+    try {
+      const response = await zipporaApi.validatePickupChargeRule({
+        accessToken,
+        memberId,
+        targetMemberId: memberId,
+        storeId: payload?.storeId,
+      });
+
+      if (__DEV__) {
+        console.log('[Penalty][RAW full response]', JSON.stringify(response));
+      }
+
+      const { ret, data, msg } = response;
+
+      if (__DEV__) {
+        const packages = data?.packages || [];
+        console.log('[Penalty][validatePickupChargeRule] response', {
+          memberId,
+          storeId: payload?.storeId,
+          ret,
+          msg,
+          allowPickup: data?.allowPickup,
+          totalPenalty: data?.totalPenalty,
+          packageCount: packages.length,
+          packages: packages.map((item: any) => ({
+            storeId: String(item.storeId),
+            overdueDays: item.overdueDays,
+            penaltyAmount: item.penaltyAmount,
+            isPenaltyPaid: item.isPenaltyPaid,
+            paidAmount: item.paidAmount,
+          })),
+        });
+      }
+
+      if (ret === 0 || ret === 1) {
+        return {
+          allowPickup: data?.allowPickup ?? true,
+          totalPenalty: Number(data?.totalPenalty || 0),
+          packages: (data?.packages || []).map((item: any) => ({
+            storeId: String(item.storeId),
+            boxModelId: item.boxModelId,
+            storeTime: item.storeTime,
+            overdueDays: Number(item.overdueDays || 0),
+            penaltyAmount: Number(item.penaltyAmount || 0),
+            isPenaltyPaid: item.isPenaltyPaid === true || item.isPenaltyPaid === 1 || item.isPenaltyPaid === '1' || item.isPenaltyPaid === 'true',
+            paidAmount: Number(item.paidAmount || 0),
+            paidTime: Number(item.paidTime || 0),
+          })),
+          message: msg,
+        };
+      }
+
+      return thunkAPI.rejectWithValue(msg || 'Failed to validate pickup penalty rules');
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.msg || error.message || 'Unexpected error occurred');
+    }
+  }
+);
+
+export const payPickupPenalty = createAsyncThunk(
+  'zippora/payPickupPenalty',
+  async (payload: { storeId?: string } | undefined, thunkAPI) => {
+    const state: any = thunkAPI.getState();
+    const { accessToken, memberId } = state.userInfo;
+
+    if (__DEV__) {
+      console.log('[Penalty][payPickupPenalty] calling with:', {
+        accessToken,
+        memberId,
+        targetMemberId: memberId,
+        storeId: payload?.storeId,
+      });
+    }
+
+    try {
+      const response = await zipporaApi.payPickupPenalty({
+        accessToken,
+        memberId,
+        targetMemberId: memberId,
+        storeId: payload?.storeId,
+      });
+
+      if (__DEV__) {
+        console.log('[Penalty][payPickupPenalty] raw response:', JSON.stringify(response));
+      }
+
+      const { ret, data, msg } = response;
+
+      if (ret === 0) {
+        return {
+          paidAmount: Number(data?.paidAmount || 0),
+          remainingBalance: Number(data?.remainingBalance || 0),
+          paidPackages: (data?.paidPackages || []).map((pkg: any) => ({
+            storeId: String(pkg.storeId),
+            paidAmount: Number(pkg.paidAmount || 0),
+            overdueDays: Number(pkg.overdueDays || 0),
+          })),
+        } as PenaltyPaymentResult;
+      }
+
+      if (ret === 2) {
+        return thunkAPI.rejectWithValue({
+          code: 2,
+          message: msg || 'Insufficient wallet balance',
+          requiredAmount: Number(data?.requiredAmount || 0),
+          currentBalance: Number(data?.currentBalance || 0),
+        });
+      }
+
+      return thunkAPI.rejectWithValue({
+        code: ret,
+        message: msg || 'Failed to pay pickup penalty',
+      });
+    } catch (error: any) {
+      if (__DEV__) {
+        console.log('[Penalty][payPickupPenalty] error caught:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+        });
+      }
+      return thunkAPI.rejectWithValue({
+        code: -1,
+        message: error.response?.data?.msg || error.response?.data?.message || error.message || 'Unexpected error occurred',
+      });
+    }
+  }
+);
+
 const zipporaInfoSlice = createSlice({
   name: 'zipporaInfo',
   initialState,
-  reducers: {},
+  reducers: {
+    clearPenaltyError: (state) => {
+      state.penaltyError = null;
+    },
+    mergePenaltyPackages: (state, action: PayloadAction<PenaltyPackage[]>) => {
+      // Merge individually-fetched per-storeId penalty amounts into existing map
+      action.payload.forEach((pkg) => {
+        const key = String(pkg.storeId);
+        if (state.penaltyByStore[key]) {
+          state.penaltyByStore[key] = { ...state.penaltyByStore[key], ...pkg };
+        } else {
+          state.penaltyByStore[key] = pkg;
+        }
+      });
+      // Recalculate totalPenalty in penaltyValidation
+      if (state.penaltyValidation) {
+        state.penaltyValidation.totalPenalty = Object.values(state.penaltyByStore)
+          .filter((p) => !p.isPenaltyPaid)
+          .reduce((sum, p) => sum + Number(p.penaltyAmount || 0), 0);
+        state.penaltyValidation.packages = Object.values(state.penaltyByStore);
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserApartments.pending, (state) => {
@@ -177,7 +372,50 @@ const zipporaInfoSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string | null;
       });
+
+      builder
+      .addCase(validatePickupChargeRule.pending, (state) => {
+        state.penaltyLoading = true;
+        state.penaltyError = null;
+      })
+      .addCase(
+        validatePickupChargeRule.fulfilled,
+        (state, action: PayloadAction<{ allowPickup: boolean; totalPenalty: number; packages: PenaltyPackage[]; message?: string }>) => {
+          state.penaltyLoading = false;
+          state.penaltyValidation = {
+            allowPickup: action.payload.allowPickup,
+            totalPenalty: action.payload.totalPenalty,
+            packages: action.payload.packages,
+          };
+
+          const mapped = action.payload.packages.reduce((acc, pkg) => {
+            acc[pkg.storeId] = pkg;
+            return acc;
+          }, {} as Record<string, PenaltyPackage>);
+
+          state.penaltyByStore = mapped;
+        }
+      )
+      .addCase(validatePickupChargeRule.rejected, (state, action) => {
+        state.penaltyLoading = false;
+        state.penaltyError = action.payload as string | null;
+      });
+
+      builder
+      .addCase(payPickupPenalty.pending, (state, action) => {
+        state.penaltyError = null;
+        state.payingPenaltyStoreId = action.meta.arg?.storeId || 'ALL';
+      })
+      .addCase(payPickupPenalty.fulfilled, (state) => {
+        state.payingPenaltyStoreId = null;
+      })
+      .addCase(payPickupPenalty.rejected, (state, action: any) => {
+        state.payingPenaltyStoreId = null;
+        state.penaltyError = action.payload?.message || action.payload || 'Failed to pay penalty';
+      });
   },
 });
+
+export const { clearPenaltyError, mergePenaltyPackages } = zipporaInfoSlice.actions;
 
 export default zipporaInfoSlice.reducer;

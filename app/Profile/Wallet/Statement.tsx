@@ -11,7 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { getStatements } from '../../features/walletSlice';
 
 interface StatementType {
@@ -60,14 +60,63 @@ const Statement: React.FC = () => {
         setRefreshing(false);
     };
 
-    const getAmountColor = (amount: string): string => {
-        const numAmount = parseFloat(amount);
+    const parseAmount = (value: any): number => {
+        if (value === null || value === undefined) return 0;
+        const normalized = String(value).replace(/[^0-9.-]/g, '');
+        const parsed = parseFloat(normalized);
+        return Number.isNaN(parsed) ? 0 : parsed;
+    };
+
+    const getDisplayAmountNumber = (statement: any): number => {
+        const sourceAmount = statement?.amountDisplay ?? statement?.amount;
+        return parseAmount(sourceAmount);
+    };
+
+    const getAmountColor = (statement: any): string => {
+        const numAmount = getDisplayAmountNumber(statement);
         return numAmount >= 0 ? '#4CAF50' : '#f44336';
     };
 
-    const getAmountSign = (amount: string): string => {
-        const numAmount = parseFloat(amount);
+    const getAmountSign = (amount: number): string => {
+        const numAmount = amount;
         return numAmount >= 0 ? '+' : '';
+    };
+
+    const formatDisplayedAmount = (statement: any): string => {
+        const rawAmount = String(statement.amountDisplay).trim();
+
+        if (statement?.amountUnit !== 'currency') {
+            return rawAmount;
+        }
+
+        if (rawAmount.includes('$')) {
+            return rawAmount;
+        }
+
+        if (rawAmount.startsWith('+') || rawAmount.startsWith('-')) {
+            return `${rawAmount.charAt(0)}$${rawAmount.slice(1)}`;
+        }
+
+        return `$${rawAmount}`;
+    };
+
+    const getAmountText = (statement: any): string => {
+        if (statement?.amountDisplay !== undefined && statement?.amountDisplay !== null) {
+            return formatDisplayedAmount(statement);
+        }
+
+        const displayAmount = getDisplayAmountNumber(statement);
+        return `${getAmountSign(displayAmount)}$${Math.abs(displayAmount).toFixed(2)}`;
+    };
+
+    const getBalanceAfterText = (statement: any): string => {
+        if ((statement?.channel || '').toLowerCase() === 'ubi') {
+            return statement.balanceAfterDisplay
+                ? `Balance after: ${statement.balanceAfterDisplay}`
+                : '';
+        }
+
+        return statement.money ? `Balance: $${statement.money}` : '';
     };
 
     const formatDate = (dateString: string): string => {
@@ -137,13 +186,13 @@ const Statement: React.FC = () => {
                 <View style={styles.amountContainer}>
                     <ZIPText style={[
                         styles.statementAmount,
-                        { color: getAmountColor(statement.amount) }
+                        { color: getAmountColor(statement) }
                     ]}>
-                        {getAmountSign(statement.amount)}${Math.abs(parseFloat(statement.amount)).toFixed(2)}
+                        {getAmountText(statement)}
                     </ZIPText>
-                    {statement.money && (
+                    {!!getBalanceAfterText(statement) && (
                         <ZIPText style={styles.statementMoney}>
-                            Balance: ${statement.money}
+                            {getBalanceAfterText(statement)}
                         </ZIPText>
                     )}
                 </View>

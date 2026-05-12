@@ -11,12 +11,12 @@ import {
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { getCreditCards } from '../../features/walletSlice';
 import { RootStackParamList } from '../../../components/types';
 import AddCreditCardForm from './AddCreditCardForm';
 
-const CreditCards: React.FC = () => {
+const PaymentMethod: React.FC = () => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const { accessToken, memberId } = useAppSelector((state) => state.userInfo);
@@ -41,13 +41,12 @@ const CreditCards: React.FC = () => {
 
     const handleFormSuccess = () => {
         setShowAddForm(false);
-        // Cards will be automatically refreshed by the async thunk
     };
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
             <Icon name="credit-card" size={80} color="#ddd" />
-            <ZIPText style={styles.emptyTitle}>No Credit Cards</ZIPText>
+            <ZIPText style={styles.emptyTitle}>No Payment Methods</ZIPText>
             <ZIPText style={styles.emptySubtitle}>
                 Add a credit card to make payments easier
             </ZIPText>
@@ -90,10 +89,10 @@ const CreditCards: React.FC = () => {
         );
     };
 
-    const renderCreditCardsList = () => (
+    const renderPaymentMethodsList = () => (
         <View style={styles.container}>
             <View style={styles.header}>
-                <ZIPText style={styles.title}>Credit Cards</ZIPText>
+                <ZIPText style={styles.title}>Payment Method</ZIPText>
                 <TouchableOpacity style={styles.addIconButton} onPress={handleAddCard}>
                     <Icon name="add" size={24} color="#4CAF50" />
                 </TouchableOpacity>
@@ -110,7 +109,7 @@ const CreditCards: React.FC = () => {
             return (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#4CAF50" />
-                    <ZIPText style={styles.loadingText}>Loading credit cards...</ZIPText>
+                    <ZIPText style={styles.loadingText}>Loading payment methods...</ZIPText>
                 </View>
             );
         }
@@ -119,7 +118,7 @@ const CreditCards: React.FC = () => {
             return (
                 <View style={styles.errorContainer}>
                     <Icon name="error" size={60} color="#f44336" />
-                    <ZIPText style={styles.errorTitle}>Error Loading Cards</ZIPText>
+                    <ZIPText style={styles.errorTitle}>Error Loading Payment Methods</ZIPText>
                     <ZIPText style={styles.errorSubtitle}>{creditCardsError}</ZIPText>
                     <TouchableOpacity 
                         style={styles.retryButton}
@@ -135,7 +134,7 @@ const CreditCards: React.FC = () => {
             return renderEmptyState();
         }
 
-        return renderCreditCardsList();
+        return renderPaymentMethodsList();
     };
 
     return (
@@ -334,4 +333,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CreditCards;
+export default PaymentMethod;

@@ -15,7 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { 
     getRechargeConfig, 
     rechargeWithCreditCard, 
@@ -170,10 +170,42 @@ const Recharge: React.FC = () => {
             return;
         }
 
-        // Show card form modal
-        if (cardNumber.length == 0 && expirationMonth.length == 0
-            && expirationYear.length == 0 && cardHolderName.length == 0 && postalCode.length == 0) {
-            setShowCardForm(true);
+        if (!creditCards || creditCards.length === 0) {
+            Alert.alert('No Payment Method', 'Please add a payment method first.');
+            navigation.navigate('Profile/Wallet/PaymentMethod' as never);
+            return;
+        }
+
+        const selectedCard = creditCards[selectedCardIndex] || creditCards[0];
+        if (!selectedCard?.cardId) {
+            Alert.alert('Error', 'Selected card is invalid. Please try another card.');
+            return;
+        }
+
+        const amount = getRechargeAmount();
+        setIsProcessing(true);
+
+        try {
+            await dispatch(
+                rechargeWithCreditCard({
+                    accessToken: accessToken!,
+                    memberId: memberId!,
+                    amount,
+                    cardId: selectedCard.cardId,
+                })
+            ).unwrap();
+
+            dispatch(getWalletBalance({ accessToken, memberId }));
+
+            Alert.alert(
+                '✅ Payment Successful!',
+                `Successfully recharged $${amount.toFixed(2)} to your wallet!`,
+                [{ text: 'OK', onPress: () => navigation.goBack() }]
+            );
+        } catch (error: any) {
+            Alert.alert('Recharge Failed', error?.message || 'Failed to recharge wallet. Please try again.');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -819,15 +851,15 @@ const Recharge: React.FC = () => {
         if (!creditCards || creditCards.length === 0) {
             return (
                 <View style={styles.section}>
-                    <ZIPText style={styles.sectionTitle}>Credit Cards</ZIPText>
+                    <ZIPText style={styles.sectionTitle}>Payment Method</ZIPText>
                     <View style={styles.noCreditCardsContainer}>
                         <Icon name="credit-card" size={60} color="#ddd" />
-                        <ZIPText style={styles.noCreditCardsText}>No credit cards found</ZIPText>
+                        <ZIPText style={styles.noCreditCardsText}>No payment methods found</ZIPText>
                         <TouchableOpacity
                             style={styles.addCardButton}
-                            onPress={() => navigation.navigate('Profile/Wallet/CreditCards' as never)}
+                            onPress={() => navigation.navigate('Profile/Wallet/PaymentMethod' as never)}
                         >
-                            <ZIPText style={styles.addCardButtonText}>Add Credit Card</ZIPText>
+                            <ZIPText style={styles.addCardButtonText}>Add Payment Method</ZIPText>
                         </TouchableOpacity>
                     </View>
                 </View>

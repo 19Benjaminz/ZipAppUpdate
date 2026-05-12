@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { walletApi } from '../config/apiService';
+import { walletApi } from '@/config/apiService';
 
 // Wallet data interfaces based on API documentation
 interface WalletBalance {
@@ -17,8 +17,8 @@ interface CreditCard {
   cardHolderName: string;
   createTime: string;
   updateTime: string;
-  isDefault: string;        // "是否是默认卡片" - whether it's default card
-  status: string;           // Card status: available, disabled, etc.
+  isDefault: string | number | boolean;        // "是否是默认卡片" - whether it's default card
+  status: string | number;           // Card status: available, disabled, etc.
   statusMsg: string;        // Card status message
 }
 
@@ -216,12 +216,25 @@ export const rechargeWithCreditCard = createAsyncThunk(
       accessToken: string;
       memberId: string;
       amount: number;
-      paymentMethodNonce: string;
+      cardId?: string;
+      paymentMethodNonce?: string;
     },
     thunkAPI
   ) => {
     try {
-      const response = await walletApi.payWithPayPal(data);
+      const response = data.cardId
+        ? await walletApi.rechargeWithCreditCard({
+            accessToken: data.accessToken,
+            memberId: data.memberId,
+            amount: data.amount,
+            cardId: data.cardId,
+          })
+        : await walletApi.payWithPayPal({
+            accessToken: data.accessToken,
+            memberId: data.memberId,
+            amount: data.amount,
+            paymentMethodNonce: data.paymentMethodNonce || '',
+          });
       const { ret, msg } = response;
 
       if (ret === 0) {
@@ -429,8 +442,10 @@ const walletSlice = createSlice({
       .addCase(getCreditCards.fulfilled, (state, action) => {
         state.creditCardsLoading = false;
         state.creditCards = action.payload;
-        // Find default card index - isDefault is a string indicating if it's the default card
-        const defaultIndex = action.payload.findIndex((card: CreditCard) => card.isDefault === '1' || card.isDefault.toLowerCase() === 'true');
+        const defaultIndex = action.payload.findIndex((card: CreditCard) => {
+          const isDefaultValue = String(card.isDefault).toLowerCase();
+          return isDefaultValue === '1' || isDefaultValue === 'true';
+        });
         state.defaultCardIndex = defaultIndex;
       })
       .addCase(getCreditCards.rejected, (state, action) => {

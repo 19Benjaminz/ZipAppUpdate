@@ -9,9 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { useAppDispatch } from '../store';
+import { useAppDispatch } from '@/store';
 import { changePassword } from '../features/userInfoSlice';
-import { md5Hash } from '../Actions/ToMD5';
+import { md5Hash } from '@/Actions/ToMD5';
 import { RootStackParamList } from '@/components/types';
 
 const ModifyPassword = () => {

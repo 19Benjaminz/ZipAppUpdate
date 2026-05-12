@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { profileApi } from '../config/apiService';
+import { profileApi } from '@/config/apiService';
 
 interface Member {
   memberId: string;

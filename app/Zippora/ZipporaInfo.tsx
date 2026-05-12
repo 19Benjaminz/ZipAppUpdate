@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { useAppDispatch, useAppSelector } from "../store";
+import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchUserApartments } from "../features/zipporaInfoSlice";
 import { unsubscribeApartment } from "../features/apartmentSlice";
 import { RootStackParamList } from '../../components/types';

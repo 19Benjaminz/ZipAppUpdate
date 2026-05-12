@@ -12,7 +12,7 @@ import {
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { getWalletBalance } from '../../features/walletSlice';
 import { RootStackParamList } from '../../../components/types';
 
@@ -108,9 +108,9 @@ const Wallet: React.FC = () => {
         //     onPress: () => navigation.navigate('Profile/Wallet/TransactionHistory'),
         // },
         {
-            title: 'Credit Cards',
+            title: 'Payment Method',
             icon: 'credit-card',
-            onPress: () => navigation.navigate('Profile/Wallet/CreditCards'),
+            onPress: () => navigation.navigate('Profile/Wallet/PaymentMethod'),
         },
         // {
         //     title: 'Transfer',

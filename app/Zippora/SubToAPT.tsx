@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { useAppDispatch, useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchApartmentList, fetchUnitList } from '../features/apartmentSlice';
 import { bindApartment } from '../features/apartmentSlice';
 import { updateUserProfile } from '../features/userInfoSlice';

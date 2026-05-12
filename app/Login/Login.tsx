@@ -12,18 +12,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback,
   useColorScheme,
   ScrollView,
 } from 'react-native';
-import { md5Hash } from '../Actions/ToMD5';
+import { md5Hash } from '@/Actions/ToMD5';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../components/types';
 import { login } from '../features/authSlice';
 import { setAccessToken, setMemberId } from '../features/userInfoSlice';
-import { RootState, useAppDispatch, useAppSelector } from '../store';
-import * as SecureStore from 'expo-secure-store';
+import { RootState, useAppDispatch, useAppSelector } from '@/store';
+import { getCurrentDeviceToken } from '@/services/deviceToken';
+import { secureStore } from '@/services/secureStore';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login/Login'>;
 
@@ -45,18 +45,35 @@ const Login = () => {
       return;
     }
 
-    const deviceId = await SecureStore.getItemAsync('zipcodexpress-device-token');
+    const deviceId = await getCurrentDeviceToken();
     const credentials = {
       email: formData.email,
       password: md5Hash(formData.password),
       ...(deviceId && { deviceId }),
     };
 
+    if (__DEV__) {
+      console.log('[auth/login] deviceId used for login:', deviceId ?? 'missing');
+    }
+
     try {
       const resultAction = await dispatch(login(credentials));
 
       if (login.fulfilled.match(resultAction)) {
-        const { accessToken, memberId } = resultAction.payload;
+        const payload: any = resultAction.payload;
+        const rawAccessToken = payload?.accessToken ?? payload?._accessToken ?? payload?.token;
+        const rawMemberId = payload?.memberId ?? payload?._memberId ?? payload?.member?.memberId;
+        const accessToken = rawAccessToken != null ? String(rawAccessToken) : '';
+        const memberId = rawMemberId != null ? String(rawMemberId) : '';
+
+        if (!accessToken || !memberId) {
+          Alert.alert('Login Failed', 'Login response is missing credentials. Please try again.');
+          return;
+        }
+
+        await secureStore.setItemAsync('accessToken', accessToken);
+        await secureStore.setItemAsync('memberId', memberId);
+
         dispatch(setAccessToken(accessToken));
         dispatch(setMemberId(memberId));
 
@@ -98,8 +115,11 @@ const Login = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.innerContainer}>
+      <ScrollView
+        contentContainerStyle={styles.innerContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View>
           <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
           <Image
@@ -171,7 +191,7 @@ const Login = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </TouchableWithoutFeedback>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

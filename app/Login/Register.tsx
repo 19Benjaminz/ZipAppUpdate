@@ -12,9 +12,9 @@ import CommonTextInput from '@/components/CommonTextInput';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../components/types';
-import { useAppDispatch } from '../store';
+import { useAppDispatch } from '@/store';
 import { sendRegisterVcode } from '../features/authSlice';
-import { capitalizeFirstLetter, formatPhoneNumber } from '../Actions/Utils';
+import { capitalizeFirstLetter, formatPhoneNumber } from '@/Actions/Utils';
 import LoadingOverlay from '@/components/LoadingOverlay';
 
 const Register = () => {

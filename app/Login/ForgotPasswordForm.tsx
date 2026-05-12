@@ -10,13 +10,13 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { useAppDispatch } from '../store';
+import { useAppDispatch } from '@/store';
 import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '@/components/types';
 import { resetPassword } from '../features/authSlice';
 import ZIPText from '@/components/ZIPText';
-import { md5Hash } from '../Actions/ToMD5';
+import { md5Hash } from '@/Actions/ToMD5';
 
 const ForgotPasswordForm: React.FC = () => {
   const dispatch = useAppDispatch();

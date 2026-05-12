@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useAppDispatch, useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchZipporaLogs } from '../features/zipporaInfoSlice';
 
 const ZipLogs: React.FC = () => {

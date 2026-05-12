@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi } from '../config/apiService'; // Adjust the import path based on your project structure
-import * as SecureStore from 'expo-secure-store';
+import { authApi } from '@/config/apiService';
+import { secureStore } from '@/services/secureStore';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface AuthState {
@@ -25,18 +25,50 @@ export const login = createAsyncThunk(
 
             if (ret === 0) {
                 // Successful login
-                const value = await SecureStore.getItemAsync("password");
-                if (!value) {
-                    SecureStore.setItemAsync("password", credentials.password);
+                const rawAccessToken = data?.accessToken ?? data?._accessToken ?? data?.token;
+                const rawMemberId = data?.memberId ?? data?._memberId ?? data?.member?.memberId;
+                const accessToken = rawAccessToken != null ? String(rawAccessToken) : '';
+                const memberId = rawMemberId != null ? String(rawMemberId) : '';
+
+                if (!accessToken || !memberId) {
+                    return thunkAPI.rejectWithValue('Login response is missing credentials');
                 }
-                return data;
+
+                await secureStore.setItemAsync('accessToken', accessToken);
+                await secureStore.setItemAsync('memberId', memberId);
+
+                const value = await secureStore.getItemAsync("password");
+                if (!value) {
+                    await secureStore.setItemAsync("password", credentials.password);
+                }
+                return {
+                    ...data,
+                    accessToken,
+                    memberId,
+                };
             } else {
                 // Reject with the error message from the API
                 return thunkAPI.rejectWithValue(msg || 'Login failed');
             }
         } catch (error: any) {
-            // Handle other unexpected errors
-            return thunkAPI.rejectWithValue(error.response?.data?.message || 'Unexpected error occurred');
+            const backendMessage =
+                error?.response?.data?.msg ||
+                error?.response?.data?.message ||
+                error?.response?.data?.error;
+
+            const fallbackMessage = error?.message || 'Unexpected error occurred';
+            const resolvedMessage = backendMessage || fallbackMessage;
+
+            if (__DEV__) {
+                console.log('[auth/login] request failed', {
+                    status: error?.response?.status,
+                    data: error?.response?.data,
+                    message: error?.message,
+                    resolvedMessage,
+                });
+            }
+
+            return thunkAPI.rejectWithValue(resolvedMessage);
         }
     }
 );
@@ -50,7 +82,7 @@ export const register = createAsyncThunk(
 
             if (ret === 0) {
                 // Successful register
-                SecureStore.setItemAsync("password", credentials.psd1);
+                secureStore.setItemAsync("password", credentials.psd1);
                 return response.data;
             } else {
                 // Reject with the error message from the API
@@ -131,7 +163,7 @@ export const resetPassword = createAsyncThunk (
 
             if (ret === 0) {
                 // Successful register
-                await SecureStore.getItemAsync('accessToken');
+                await secureStore.getItemAsync('accessToken');
                 return response.data;
             } else {
                 // Reject with the error message from the API
@@ -158,8 +190,8 @@ const authSlice = createSlice({
             .addCase(login.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload;
-                SecureStore.setItemAsync("accessToken", action.payload.accessToken);
-                SecureStore.setItemAsync("memberId", action.payload.memberId);
+                secureStore.setItemAsync("accessToken", action.payload.accessToken);
+                secureStore.setItemAsync("memberId", action.payload.memberId);
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
@@ -175,8 +207,8 @@ const authSlice = createSlice({
                 console.log("Register Success")
                 state.loading = false;
                 state.user = action.payload;
-                SecureStore.setItemAsync("accessToken", action.payload.accessToken);
-                SecureStore.setItemAsync("memberId", action.payload.memberId);
+                secureStore.setItemAsync("accessToken", action.payload.accessToken);
+                secureStore.setItemAsync("memberId", action.payload.memberId);
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
@@ -190,8 +222,8 @@ const authSlice = createSlice({
             })
             .addCase(logout.fulfilled, (state, action) => {
                 state.loading = false;
-                SecureStore.deleteItemAsync("accessToken");
-                SecureStore.deleteItemAsync("memberId");
+                secureStore.deleteItemAsync("accessToken");
+                secureStore.deleteItemAsync("memberId");
                 AsyncStorage.removeItem("appLaunchCount");
             })
             .addCase(logout.rejected, (state, action) => {

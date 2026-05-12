@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { apartmentApi } from "../config/apiService";
+import { apartmentApi } from '@/config/apiService';
 
 export interface ApartmentInfo {
     apartmentId: string;

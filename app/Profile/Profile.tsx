@@ -12,7 +12,7 @@ import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ZIPText from '@/components/ZIPText';
 import { RootStackParamList } from '../../components/types';
-import { useAppDispatch, useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { getUser } from '../features/userInfoSlice';
 
 interface ProfileItemProps {

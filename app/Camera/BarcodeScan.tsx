@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Alert, StyleSheet, TouchableOpacity, View, Dimensions, Platform } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useAppDispatch } from "../store";
+import { useAppDispatch } from '@/store';
 import Overlay from "@/components/Overlay";
 import { useFocusEffect } from "@react-navigation/native";
 import { scanQRCode } from "../features/zipporaInfoSlice";
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../components/types';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as StoreReview from 'expo-store-review';
+import { requestReview } from '@/components/rateApp';
 
-// Define navigation type
-type BarcodeScanNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Zippora/BarcodeScan'>;
+type MainTabsParamList = {
+  Home: undefined;
+  BarcodeScan: undefined;
+  Profile: undefined;
+};
+
+type BarcodeScanNavigationProp = BottomTabNavigationProp<MainTabsParamList, 'BarcodeScan'>;
 
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -29,6 +33,7 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
   const [scanned, setScanned] = useState(false);
   const [showCamera, setShowCamera] = useState(true); // State to control camera rendering
   const navigation = useNavigation<BarcodeScanNavigationProp>();
+  const scanInFlightRef = useRef(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -39,6 +44,7 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
         setCameraLoading(false); // Notify parent that camera is ready
       }, 500); // Adjust delay if needed
       setScanned(false);
+      scanInFlightRef.current = false;
 
       
     }, [])
@@ -51,36 +57,47 @@ export default function BarcodeScan({ setCameraLoading }: { setCameraLoading: (l
   }, [permission, requestPermission]);
 
   const handleBarCodeScanned = async({ data }: { data: string }) => {
-    if (scanned) return;
+    if (scanned || scanInFlightRef.current) return;
+    scanInFlightRef.current = true;
     setScanned(true);
+
     try {
-      const response = await dispatch(scanQRCode(data));
+      await dispatch(scanQRCode(data)).unwrap();
+
       // Increment scan count for rating prompt
+      let shouldRequestReview = false;
       try {
         const countStr = await AsyncStorage.getItem('scanSuccessCount');
         const newCount = countStr ? parseInt(countStr) + 1 : 1;
         await AsyncStorage.setItem('scanSuccessCount', newCount.toString());
         console.log('Scan Success Count:', newCount);
-        if (newCount >= 2 && newCount % 2 === 0 && (await StoreReview.hasAction())) {
-          await StoreReview.requestReview();
+        if (newCount >= 2 && newCount % 2 === 0) {
+          shouldRequestReview = true;
           await AsyncStorage.setItem('scanSuccessCount', '0');
         }
       } catch (e) {
         console.error('Error updating scan count', e);
       }
+
+        // Signal Home to show a short non-blocking success banner.
+        await AsyncStorage.setItem('lastScanSuccessAt', Date.now().toString());
+
+      navigation.navigate('Home');
+      setShowCamera(false);
+
+      if (shouldRequestReview) {
+        setTimeout(() => {
+          requestReview().catch((reviewError) => {
+            console.error('Error requesting app review', reviewError);
+          });
+        }, 300);
+      }
     } catch (error) {
       console.error('Error Scaning qr Code', error);
+      setScanned(false);
+      scanInFlightRef.current = false;
       Alert.alert('Error', 'Failed to Scan QR code');
     }
-    Alert.alert("QR Code Scanned Success", "", [
-      {
-        text: "OK",
-        onPress: () => {
-          setScanned(false);
-          navigation.navigate("Zippora/ZipporaHome"); // Navigate back to Home
-        },
-      },
-    ]);
   };
 
   const toggleCameraFacing = () => {

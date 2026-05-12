@@ -5,8 +5,8 @@ import Profile from './Profile/Profile';
 import BarcodeScan from './Camera/BarcodeScan';
 import { Icon } from 'react-native-elements';
 import { View, TouchableOpacity, StyleSheet, Text, Platform, ActivityIndicator } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import { useAppDispatch, useAppSelector } from './store';
+import { secureStore } from '@/services/secureStore';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { setAccessToken, setMemberId } from './features/userInfoSlice';
 
 const Tab = createBottomTabNavigator();
@@ -23,20 +23,20 @@ export default function MainTabs() {
 
     useEffect(() => {
         const initializeAuth = async () => {
-            const accessToken = (await SecureStore.getItemAsync('accessToken')) || '';
-            const memberId = (await SecureStore.getItemAsync('memberId')) || '';
+            const accessToken = (await secureStore.getItemAsync('accessToken')) || '';
+            const memberId = (await secureStore.getItemAsync('memberId')) || '';
 
             dispatch(setAccessToken(accessToken));
             dispatch(setMemberId(memberId));
             setLoading(false);
         };
 
-        if (!accessToken && !memberId) {
+        if (!accessToken || !memberId) {
             initializeAuth();
         } else {
             setLoading(false);
         }
-    }, [dispatch]);
+    }, [dispatch, accessToken, memberId]);
 
     if (loading) {
         return (

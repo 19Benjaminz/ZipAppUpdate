@@ -13,10 +13,11 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../components/types';
-import { useAppDispatch, useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { getUser, updateHouseholdMember, updateUserProfile } from '../features/userInfoSlice';
 import { logout } from '../features/authSlice';
-import { md5Hash } from '../Actions/ToMD5';
+import { forceResetToLogin } from '../config/apiClient';
+import { md5Hash } from '@/Actions/ToMD5';
 import * as ImagePicker from 'expo-image-picker';
 
 
@@ -228,14 +229,15 @@ const PersonalInformation: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await dispatch(logout());
-    console.log('logout success');
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login/Login' }],
-    });
-    return
-  }
+    try {
+      await dispatch(logout()).unwrap();
+      console.log('logout success');
+    } catch (error) {
+      console.error('logout failed, clearing local session anyway:', error);
+    }
+
+    forceResetToLogin();
+  };
 
   const handleAddMember = () => {
     if (newMember.trim() !== '') {

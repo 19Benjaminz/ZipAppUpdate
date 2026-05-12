@@ -24,7 +24,7 @@ export type RootStackParamList = {
     "Profile/Wallet/Recharge": undefined;
     "Profile/Wallet/Statement": undefined;
     "Profile/Wallet/TransactionHistory": undefined;
-    "Profile/Wallet/CreditCards": undefined;
+    "Profile/Wallet/PaymentMethod": undefined;
     "Zippora/SubToAPT": undefined;
     "Zippora/ZipporaInfo": undefined;
     "Zippora/ZipLogs": undefined;

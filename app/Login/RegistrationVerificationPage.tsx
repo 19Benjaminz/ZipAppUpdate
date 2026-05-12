@@ -15,7 +15,7 @@ import {
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/core';
 import { RootStackParamList } from '../../components/types';
-import { useAppDispatch } from '../store';
+import { useAppDispatch } from '@/store';
 import { register } from '../features/authSlice';
 import { setAccessToken, setMemberId } from '../features/userInfoSlice';
 

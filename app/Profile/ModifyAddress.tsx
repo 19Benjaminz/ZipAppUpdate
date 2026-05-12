@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import { useAppDispatch, useAppSelector } from '../store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { updateUserProfile } from '../features/userInfoSlice';
 import { RootStackParamList } from '@/components/types';
 

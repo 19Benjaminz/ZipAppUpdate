@@ -11,7 +11,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { useAppDispatch } from '../store';
+import { useAppDispatch } from '@/store';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '@/components/types';
 import { sendForgotPasswordVcode } from '../features/authSlice';
