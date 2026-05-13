@@ -1,5 +1,5 @@
 // plugins/withBraintree.js
-const { withPodfile, withDangerousMod, withAndroidManifest } = require('@expo/config-plugins');
+const { withPodfile, withDangerousMod, withAndroidManifest } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 

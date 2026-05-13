@@ -5,12 +5,16 @@ import { API_ENDPOINTS } from './endpoints';
 
 export const authApi = {
   login: async (credentials: { email?: string; phoneNum?: string; userid?: string; password: string; deviceId?: string }) => {
-    const payload = new URLSearchParams();
-    if (credentials.email) payload.append('email', credentials.email);
-    if (credentials.phoneNum) payload.append('phoneNum', credentials.phoneNum);
-    if (credentials.userid) payload.append('userid', credentials.userid);
-    payload.append('psd', credentials.password);
-    if (credentials.deviceId) payload.append('deviceId', credentials.deviceId);
+    const payload = [
+      credentials.email ? ['email', credentials.email] : null,
+      credentials.phoneNum ? ['phoneNum', credentials.phoneNum] : null,
+      credentials.userid ? ['userid', credentials.userid] : null,
+      ['psd', credentials.password],
+      credentials.deviceId ? ['deviceId', credentials.deviceId] : null,
+    ]
+      .filter((entry): entry is [string, string] => entry !== null)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
 
     return apiClient.post(API_ENDPOINTS.LOGIN.LOGIN, payload, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
